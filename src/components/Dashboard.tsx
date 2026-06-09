@@ -64,13 +64,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex gap-2">
           <button 
             onClick={onRefresh}
-            className="p-2 bg-white rounded-full border shadow-sm hover:bg-gray-50 transition-colors"
+            className="p-2 bg-[#161c18] rounded-full border shadow-none hover:bg-gray-50 transition-colors"
           >
             <RefreshCw className="w-5 h-5 text-gray-600" />
           </button>
           <button 
             onClick={onExport}
-            className="p-2 bg-white rounded-full border shadow-sm hover:bg-gray-50 transition-colors"
+            className="p-2 bg-[#161c18] rounded-full border shadow-none hover:bg-gray-50 transition-colors"
           >
             <Download className="w-5 h-5 text-gray-600" />
           </button>
@@ -99,7 +99,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Weather Widget */}
       {weather && (
-        <div className="mx-4 p-5 bg-white rounded-2xl border shadow-sm overflow-hidden relative">
+        <div className="mx-4 p-5 bg-[#161c18] rounded-2xl border shadow-none overflow-hidden relative">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Cloud className="w-24 h-24 text-blue-500" />
           </div>
@@ -108,7 +108,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Cloud className="w-5 h-5 text-blue-500" />
               {t.weather}
             </h2>
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-full uppercase tracking-wider">
               {weather.description}
             </span>
           </div>
@@ -138,7 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       )}
 
       {/* Stats & Chart */}
-      <div className="mx-4 p-5 bg-white rounded-2xl border shadow-sm">
+      <div className="mx-4 p-5 bg-[#161c18] rounded-2xl border shadow-none">
         <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-green-600" />
           {t.recent}
@@ -178,8 +178,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             <span className="block text-xl font-black text-green-600">{stats.completed}</span>
             <span className="text-[10px] text-green-400 font-bold uppercase tracking-wider">OK</span>
           </div>
-          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 text-center">
-            <span className="block text-xl font-black text-blue-600">{stats.analyzing}</span>
+          <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-100 text-center">
+            <span className="block text-xl font-black text-blue-400">{stats.analyzing}</span>
             <span className="text-[10px] text-blue-400 font-bold uppercase tracking-wider">IA</span>
           </div>
         </div>
@@ -201,7 +201,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               key={obs.id}
               onClick={() => onViewCatalog()} // Simplified for dashboard preview
-              className="flex items-center gap-3 p-3 bg-white rounded-xl border shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-3 p-3 bg-[#161c18] rounded-xl border shadow-none cursor-pointer hover:bg-gray-50 transition-colors"
             >
               <img 
                 src={obs.imageUrl} 

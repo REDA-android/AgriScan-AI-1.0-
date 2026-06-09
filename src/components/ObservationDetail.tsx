@@ -52,7 +52,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
       case 'completed':
         return <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wider"><CheckCircle2 className="w-3 h-3" /> {t.success}</span>;
       case 'error':
-        return <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-full uppercase tracking-wider"><AlertCircle className="w-3 h-3" /> {t.error}</span>;
+        return <span className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-400 text-[10px] font-bold rounded-full uppercase tracking-wider"><AlertCircle className="w-3 h-3" /> {t.error}</span>;
       case 'analyzing':
         return <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wider animate-pulse"><Clock className="w-3 h-3" /> {t.pending}</span>;
       default:
@@ -63,7 +63,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-30 bg-[#161c18]/80 backdrop-blur-md border-b px-4 py-3 flex items-center justify-between">
         <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6 text-gray-900" />
         </button>
@@ -78,7 +78,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
         <div className="flex gap-1">
           <button 
             onClick={() => onDelete(observation.id)}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+            className="p-2 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
           >
             <Trash2 className="w-5 h-5" />
           </button>
@@ -104,13 +104,13 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
           <>
             <button 
               onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1))}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/20 backdrop-blur-md rounded-full text-white"
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-[#161c18]/20 backdrop-blur-md rounded-full text-white"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button 
               onClick={() => setCurrentImageIndex(prev => (prev < images.length - 1 ? prev + 1 : 0))}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/20 backdrop-blur-md rounded-full text-white"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-[#161c18]/20 backdrop-blur-md rounded-full text-white"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -118,7 +118,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
               {images.map((_, i) => (
                 <div 
                   key={i} 
-                  className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/40'}`} 
+                  className={`h-1.5 rounded-full transition-all ${i === currentImageIndex ? 'w-6 bg-[#161c18]' : 'w-1.5 bg-[#161c18]/40'}`} 
                 />
               ))}
             </div>
@@ -133,7 +133,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
       {/* Main Content */}
       <div className="px-4 -mt-6 relative z-10 space-y-4">
         {/* Quick Info Card */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border p-5 space-y-4">
+        <div className="bg-[#161c18] rounded-2xl shadow-xl shadow-gray-200/50 border p-5 space-y-4">
           <div className="flex justify-between items-center border-b pb-4">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-green-50 rounded-xl">
@@ -168,7 +168,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
 
         {/* AI Analysis Section */}
         {observation.status === 'completed' && (
-          <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-6">
+          <div className="bg-[#161c18] rounded-2xl border shadow-none p-5 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 <Info className="w-5 h-5 text-blue-500" />
@@ -176,7 +176,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
               </h2>
               <button 
                 onClick={() => onReset(observation.id)}
-                className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all"
+                className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-full transition-all"
               >
                 <RefreshCw className="w-5 h-5" />
               </button>
@@ -190,9 +190,9 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                <div className="p-3 bg-blue-500/10/50 rounded-xl border border-blue-100">
                   <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Fleurs</p>
-                  <p className="text-xl font-black text-blue-600">{observation.organCounts?.flowers ?? 0}</p>
+                  <p className="text-xl font-black text-blue-400">{observation.organCounts?.flowers ?? 0}</p>
                 </div>
                 <div className="p-3 bg-orange-50/50 rounded-xl border border-orange-100">
                   <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Fruits</p>
@@ -209,7 +209,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
                     { label: 'Taille', value: observation.phenotypicTraits?.size },
                     { label: 'Santé', value: observation.phenotypicTraits?.healthStatus },
                   ].map((trait, i) => (
-                    <div key={i} className="flex justify-between items-center p-2 bg-white border rounded-lg">
+                    <div key={i} className="flex justify-between items-center p-2 bg-[#161c18] border rounded-lg">
                       <span className="text-[10px] font-bold text-gray-400 uppercase">{trait.label}</span>
                       <span className="text-xs font-bold text-gray-900">{trait.value || 'Non spécifié'}</span>
                     </div>
@@ -222,7 +222,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
                   <h3 className="text-xs font-black text-red-400 uppercase tracking-widest">Alertes Sanitaires</h3>
                   <div className="flex flex-wrap gap-2">
                     {observation.phenotypicTraits.diseasesOrDeficiencies.map((d, i) => (
-                      <span key={i} className="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-md border border-red-100">
+                      <span key={i} className="px-2 py-1 bg-red-500/100/10 text-red-400 text-[10px] font-bold rounded-md border border-red-500/20">
                         {d}
                       </span>
                     ))}
@@ -234,9 +234,9 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
         )}
 
         {/* Share & QR Code Card */}
-        <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-4">
+        <div className="bg-[#161c18] rounded-2xl border shadow-none p-5 space-y-4">
           <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5 border-b pb-2">
-            <Share2 className="w-4 h-4 text-emerald-600" />
+            <Share2 className="w-4 h-4 text-emerald-400" />
             Code QR de Terrain
           </h2>
           <div className="flex flex-col items-center justify-center text-center space-y-3">
@@ -244,7 +244,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
               Scannez ce code QR pour ouvrir instantanément cette fiche botanique sur un autre appareil mobile.
             </p>
             {qrCodeDataUrl ? (
-              <div className="p-2 bg-white border border-gray-100 rounded-xl shadow-inner inline-block">
+              <div className="p-2 bg-[#161c18] border border-gray-100 rounded-xl shadow-inner inline-block">
                 <img src={qrCodeDataUrl} alt="Code QR de l'observation" className="w-36 h-36" />
               </div>
             ) : (
@@ -260,7 +260,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
                     .then(() => alert("Lien d'observation copié !"))
                     .catch(() => alert("Échec de la copie."));
                 }}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 bg-[#0d120f] border border-white/10 hover:bg-white/5 text-slate-300 text-xs font-bold rounded-lg transition-colors flex items-center gap-1"
               >
                 Copier le lien
               </button>
@@ -278,7 +278,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
         </div>
 
         {/* Agronomist Notes */}
-        <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-4">
+        <div className="bg-[#161c18] rounded-2xl border shadow-none p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
               <Edit2 className="w-5 h-5 text-orange-500" />
@@ -287,7 +287,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
             {!isEditingNotes ? (
               <button 
                 onClick={() => setIsEditingNotes(true)}
-                className="text-xs font-bold text-blue-600"
+                className="text-xs font-bold text-blue-400"
               >
                 Modifier
               </button>
@@ -326,7 +326,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
         </div>
 
         {/* Technical Details Grid (Field Ops) */}
-        <div className="bg-white rounded-2xl border shadow-sm p-5 space-y-4">
+        <div className="bg-[#161c18] rounded-2xl border shadow-none p-5 space-y-4">
           <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Données Opérationnelles</h2>
           <div className="grid grid-cols-2 gap-y-4 gap-x-8">
             {[

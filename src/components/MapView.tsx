@@ -156,13 +156,13 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Lieu, parcelle ou variété..." 
-            className="w-full pl-10 pr-4 py-2.5 bg-white/90 backdrop-blur rounded-xl shadow-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-[#161c18]/90 backdrop-blur rounded-xl shadow-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
           />
           {searchQuery && (
             <button 
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-400"
             >
               <X size={16} />
             </button>
@@ -170,49 +170,49 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
         </form>
 
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <div className="flex bg-white/90 backdrop-blur p-1 rounded-full shadow-md border border-slate-100">
+          <div className="flex bg-[#161c18]/90 backdrop-blur p-1 rounded-full shadow-md border border-white/5">
             <button 
               onClick={() => setMapType('standard')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'standard' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'standard' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Standard
             </button>
             <button 
               onClick={() => setMapType('satellite')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'satellite' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'satellite' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Satellite
             </button>
           </div>
 
-          <div className="h-8 w-px bg-slate-200 mx-1"></div>
+          <div className="h-8 w-px bg-white/10 mx-1"></div>
 
-          <div className="flex bg-white/90 backdrop-blur p-1 rounded-full shadow-md border border-slate-100">
+          <div className="flex bg-[#161c18]/90 backdrop-blur p-1 rounded-full shadow-md border border-white/5">
             <button 
               onClick={() => setOverlayType('none')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'none' ? 'bg-slate-800 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'none' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Standard
             </button>
             <button 
               onClick={() => setOverlayType('health')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'health' ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'health' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Santé
             </button>
             <button 
               onClick={() => setOverlayType('density')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'density' ? 'bg-violet-600 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'density' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Densité
             </button>
           </div>
 
-          <div className="h-8 w-px bg-slate-200 mx-1"></div>
+          <div className="h-8 w-px bg-white/10 mx-1"></div>
 
           <button 
             onClick={() => setSelectedFamily(null)}
-            className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${!selectedFamily ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-100'}`}
+            className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${!selectedFamily ? 'bg-emerald-600 text-white' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
           >
             Tous
           </button>
@@ -220,7 +220,7 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
             <button 
               key={family}
               onClick={() => setSelectedFamily(family)}
-              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${selectedFamily === family ? 'bg-emerald-600 text-white' : 'bg-white text-slate-600 border border-slate-100'}`}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${selectedFamily === family ? 'bg-emerald-600 text-white' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
             >
               {family}
             </button>
@@ -262,10 +262,10 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
             >
               <Popup>
                 <div className="p-1 min-w-[120px]">
-                  <h3 className="font-bold text-emerald-800 text-sm">{marker.name}</h3>
-                  <p className="text-[10px] text-slate-500 font-medium">{marker.variety}</p>
-                  <div className="mt-2 space-y-1 border-t border-slate-100 pt-2">
-                    {marker.domain && <p className="text-[10px] text-emerald-600 flex items-center gap-1"><MapPin size={10} /> {marker.domain}</p>}
+                  <h3 className="font-bold text-emerald-400 text-sm">{marker.name}</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">{marker.variety}</p>
+                  <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
+                    {marker.domain && <p className="text-[10px] text-emerald-400 flex items-center gap-1"><MapPin size={10} /> {marker.domain}</p>}
                     {marker.healthStatus && (
                       <p className="text-[10px] flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getMarkerColor(marker) }}></span>
@@ -273,8 +273,8 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
                       </p>
                     )}
                     {marker.density && (
-                      <p className="text-[10px] text-slate-500">
-                        Densité: <span className="font-bold text-slate-700">{marker.density}</span>
+                      <p className="text-[10px] text-slate-400">
+                        Densité: <span className="font-bold text-slate-300">{marker.density}</span>
                       </p>
                     )}
                   </div>
@@ -286,13 +286,13 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
         
         {/* Legend for Overlays */}
         {overlayType !== 'none' && (
-          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur p-2 rounded-lg shadow-lg border border-slate-200 z-[1000] text-[8px] font-bold uppercase tracking-wider space-y-1">
+          <div className="absolute bottom-4 left-4 bg-[#161c18]/90 backdrop-blur p-2 rounded-lg shadow-lg border border-white/10 z-[1000] text-[8px] font-bold uppercase tracking-wider space-y-1">
             <p className="text-slate-400 mb-1">Légende: {overlayType === 'health' ? 'Santé' : 'Densité'}</p>
             {overlayType === 'health' ? (
               <>
                 <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Bonne</div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Stress</div>
-                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500"></span> Mauvaise</div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500/100"></span> Stress</div>
+                <div className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-red-500/100"></span> Mauvaise</div>
               </>
             ) : (
               <>

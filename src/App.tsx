@@ -4,7 +4,7 @@ import {
   LogOut, Map as MapIcon, Plus, Search, Wind, Edit2, Save, RefreshCw, X, 
   TrendingUp, Calendar, Image as ImageIcon, Trash2, Globe, Cloud, Download, Upload,
   MapPin, User as UserIcon, Mail, Lock, AlertCircle, ArrowLeft, ChevronLeft,
-  Book, Filter, Info, Maximize2, CheckSquare, Square, ChevronRight, Star, MessageSquare, Bot
+  Book, Filter, Info, Maximize2, CheckSquare, Square, ChevronRight, Star, MessageSquare, Bot, Leaf
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 import CameraView, { ProcessedImage } from './components/CameraView';
 import MapView from './components/MapView';
+import { ChatBot } from './components/ChatBot';
 // Hooks & Utils
 import { useUserProfile } from './hooks/useUserProfile';
 import { useObservations } from './hooks/useObservations';
@@ -161,17 +162,17 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-white flex flex-col"
+      className="fixed inset-0 z-[100] bg-[#161c18] flex flex-col"
       dir={isArabic ? 'rtl' : 'ltr'}
     >
-      <header className="p-4 border-b border-slate-100 flex items-center gap-4 sticky top-0 bg-white z-10">
-        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+      <header className="p-4 border-b border-white/5 flex items-center gap-4 sticky top-0 bg-[#161c18] z-10">
+        <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
           <ChevronLeft size={24} />
         </button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-slate-800 truncate">{observation.variety || observation.culture || t.observationDetails || "Détails de l'observation"}</h2>
+          <h2 className="text-lg font-bold text-slate-200 truncate">{observation.variety || observation.culture || t.observationDetails || "Détails de l'observation"}</h2>
           {isAdmin && observation.isDeletedByCreator && (
-            <p className="text-[8px] font-black text-red-500 uppercase tracking-widest flex items-center gap-1">
+            <p className="text-[8px] font-black text-red-400 uppercase tracking-widest flex items-center gap-1">
               <Trash2 size={10} /> Supprimé par l'utilisateur
             </p>
           )}
@@ -179,7 +180,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
         {(isAdmin || observation.userId === auth.currentUser?.uid) && (
           <button 
             onClick={() => onDelete(observation.id)}
-            className={`p-2 rounded-xl transition-all ${isDeleting === observation.id ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
+            className={`p-2 rounded-xl transition-all ${isDeleting === observation.id ? 'bg-red-600 text-white' : 'bg-red-500/100/10 text-red-400 hover:bg-red-100'}`}
           >
             {isDeleting === observation.id ? <CheckSquare size={20} /> : <Trash2 size={20} />}
           </button>
@@ -188,7 +189,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
 
       <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-12">
         <div className="space-y-4">
-          <div className="relative rounded-3xl overflow-hidden shadow-lg border border-slate-100 bg-slate-50 min-h-[300px] flex items-center justify-center group">
+          <div className="relative rounded-3xl overflow-hidden shadow-lg border border-white/5 bg-[#0d120f] min-h-[300px] flex items-center justify-center group">
             <AnimatePresence mode="wait">
               <motion.img 
                 key={currentIndex}
@@ -215,7 +216,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             )}
 
             {observation.status === 'error' && (
-              <div className="absolute inset-0 bg-red-500/90 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
+              <div className="absolute inset-0 bg-red-500/100/90 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
                 <AlertCircle size={48} className="mb-4" />
                 <h4 className="text-lg font-bold mb-2">L'analyse a échoué</h4>
                 <p className="text-sm opacity-80 max-w-xs mb-6">
@@ -223,7 +224,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
                 </p>
                 <button 
                   onClick={() => onRetry(observation.id)}
-                  className="px-6 py-2 bg-white text-red-600 rounded-full font-bold hover:bg-red-50 transition-colors"
+                  className="px-6 py-2 bg-[#161c18] text-red-400 rounded-full font-bold hover:bg-red-500/10 transition-colors"
                 >
                   Ressayer l'analyse
                 </button>
@@ -234,13 +235,13 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
               <>
                 <button 
                   onClick={handlePrev}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md text-slate-800 hover:bg-white transition-colors z-10"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-[#161c18]/80 backdrop-blur-md rounded-full shadow-md text-slate-200 hover:bg-[#161c18] transition-colors z-10"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button 
                   onClick={handleNext}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-md text-slate-800 hover:bg-white transition-colors z-10"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-[#161c18]/80 backdrop-blur-md rounded-full shadow-md text-slate-200 hover:bg-[#161c18] transition-colors z-10"
                 >
                   <ChevronRight size={20} />
                 </button>
@@ -255,7 +256,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
                 e.stopPropagation();
                 onDownload(images[currentIndex], `agroscan_${observation.id}_${currentIndex}.jpg`);
               }}
-              className="absolute top-2 right-2 p-2 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-full hover:bg-white/40 transition-all z-10"
+              className="absolute top-2 right-2 p-2 bg-[#161c18]/20 backdrop-blur-md border border-white/30 text-white rounded-full hover:bg-[#161c18]/40 transition-all z-10"
               title="Télécharger l'image"
             >
               <Download size={18} />
@@ -268,7 +269,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
                 <button 
                   key={i} 
                   onClick={() => setCurrentIndex(i)}
-                  className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${currentIndex === i ? 'border-emerald-500 scale-95 shadow-inner' : 'border-slate-200'}`}
+                  className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${currentIndex === i ? 'border-emerald-500 scale-95 shadow-inner' : 'border-white/10'}`}
                 >
                   <img src={url} alt="" className="w-full h-full object-cover" />
                 </button>
@@ -280,8 +281,8 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
         <section className="space-y-4">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight">{observation.variety || 'Variété non spécifiée'}</h3>
-              <p className="text-sm font-bold text-emerald-600 uppercase tracking-widest">{observation.culture || observation.family || 'Culture non spécifiée'}</p>
+              <h3 className="text-2xl font-black text-slate-200 tracking-tight">{observation.variety || 'Variété non spécifiée'}</h3>
+              <p className="text-sm font-bold text-emerald-400 uppercase tracking-widest">{observation.culture || observation.family || 'Culture non spécifiée'}</p>
             </div>
             <div className="text-right">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -294,13 +295,13 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="p-3 bg-[#0d120f] rounded-2xl border border-white/5">
               <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">{t.region}</p>
-              <p className="text-xs font-bold text-slate-700">{observation.region || 'Non spécifié'}</p>
+              <p className="text-xs font-bold text-slate-300">{observation.region || 'Non spécifié'}</p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="p-3 bg-[#0d120f] rounded-2xl border border-white/5">
               <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">{t.domain}</p>
-              <p className="text-xs font-bold text-slate-700">{observation.domain || 'Non spécifié'}</p>
+              <p className="text-xs font-bold text-slate-300">{observation.domain || 'Non spécifié'}</p>
             </div>
           </div>
         </section>
@@ -310,16 +311,16 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <TrendingUp size={14} /> Phénologie (BBCH)
             </h4>
-            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <div className="p-4 bg-emerald-500/10 rounded-2xl border border-emerald-500/20">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-bold text-emerald-700 uppercase">Stade Dominant</span>
-                <span className="text-sm font-black text-emerald-800">{observation.bbchDominant}</span>
+                <span className="text-[10px] font-bold text-emerald-400 uppercase">Stade Dominant</span>
+                <span className="text-sm font-black text-emerald-400">{observation.bbchDominant}</span>
               </div>
               {observation.bbchSecondary && Array.isArray(observation.bbchSecondary) && observation.bbchSecondary.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="text-[8px] font-bold text-slate-400 uppercase w-full">Stades Secondaires</span>
                   {observation.bbchSecondary.map((s: string) => (
-                    <span key={s} className="px-2 py-0.5 bg-white border border-emerald-100 rounded-full text-[10px] font-bold text-emerald-600">
+                    <span key={s} className="px-2 py-0.5 bg-[#161c18] border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-400">
                       {s}
                     </span>
                   ))}
@@ -334,15 +335,15 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             <Plus size={14} /> Organes de Production
           </h4>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-center">
+            <div className="p-4 bg-[#161c18] rounded-2xl border border-white/5 shadow-none text-center">
               <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Fleurs</p>
-              <p className="text-2xl font-black text-slate-800">{observation.organCounts?.flowers ?? 0}</p>
+              <p className="text-2xl font-black text-slate-200">{observation.organCounts?.flowers ?? 0}</p>
             </div>
-            <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm text-center">
+            <div className="p-4 bg-[#161c18] rounded-2xl border border-white/5 shadow-none text-center">
               <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Fruits</p>
-              <p className="text-2xl font-black text-slate-800">{observation.organCounts?.fruits ?? 0}</p>
+              <p className="text-2xl font-black text-slate-200">{observation.organCounts?.fruits ?? 0}</p>
             </div>
-            <div className="col-span-2 p-3 bg-slate-50 rounded-xl text-[10px] text-slate-600 italic">
+            <div className="col-span-2 p-3 bg-[#0d120f] rounded-xl text-[10px] text-slate-400 italic">
               {observation.organCounts?.details || "Pas de détails additionnels."}
             </div>
           </div>
@@ -355,9 +356,9 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             </h4>
             <div className="grid grid-cols-2 gap-3">
               {Object.entries(observation.characterizationTraits).map(([key, value]: [string, any]) => (
-                <div key={key} className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                <div key={key} className="p-3 bg-[#161c18] rounded-2xl border border-white/5 shadow-none">
                   <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">{key}</p>
-                  <p className="text-xs font-bold text-slate-700">{String(value || 'Non spécifié')}</p>
+                  <p className="text-xs font-bold text-slate-300">{String(value || 'Non spécifié')}</p>
                 </div>
               ))}
             </div>
@@ -375,9 +376,9 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
               { label: 'Taille', value: observation.phenotypicTraits?.size },
               { label: 'Santé', value: observation.phenotypicTraits?.healthStatus },
             ].map((trait, i) => (
-              <div key={i} className="p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+              <div key={i} className="p-3 bg-[#161c18] rounded-2xl border border-white/5 shadow-none">
                 <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">{trait.label}</p>
-                <p className="text-xs font-bold text-emerald-600">{trait.value || 'Non spécifié'}</p>
+                <p className="text-xs font-bold text-emerald-400">{trait.value || 'Non spécifié'}</p>
               </div>
             ))}
           </div>
@@ -387,7 +388,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Alertes Sanitaires</span>
               <div className="flex flex-wrap gap-2">
                 {observation.phenotypicTraits.diseasesOrDeficiencies.map((d: string, i: number) => (
-                  <span key={i} className="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-md border border-red-100">
+                  <span key={i} className="px-2 py-1 bg-red-500/100/10 text-red-400 text-[10px] font-bold rounded-md border border-red-500/20">
                     {d}
                   </span>
                 ))}
@@ -401,7 +402,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Book size={14} /> {t.notes}
             </h4>
-            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-slate-700 text-sm leading-relaxed italic">
+            <div className="p-4 bg-amber-500/10 rounded-2xl border border-amber-500/20 text-slate-300 text-sm leading-relaxed italic">
               {observation.userNotes}
             </div>
           </section>
@@ -411,7 +412,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <MapPin size={14} /> Localisation
           </h4>
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
+          <div className="p-4 bg-[#0d120f] rounded-2xl border border-white/5 flex justify-between items-center">
             <div>
               <p className="text-[10px] font-bold text-slate-500">Latitude: {observation.location?.lat?.toFixed ? observation.location.lat.toFixed(6) : '48.8566'}</p>
               <p className="text-[10px] font-bold text-slate-500">Longitude: {observation.location?.lng?.toFixed ? observation.location.lng.toFixed(6) : '2.3522'}</p>
@@ -423,7 +424,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
                 const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
                 window.open(url, '_blank');
               }}
-              className="p-2 bg-white text-emerald-600 rounded-xl border border-slate-200 shadow-sm"
+              className="p-2 bg-[#161c18] text-emerald-400 rounded-xl border border-white/10 shadow-none"
             >
               <Globe size={18} />
             </button>
@@ -517,11 +518,11 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
     return (
       <div className="p-6 space-y-6 pb-32" dir={isArabic ? 'rtl' : 'ltr'}>
         <header className="flex items-center gap-4">
-          <button onClick={() => setSelectedUserId(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <button onClick={() => setSelectedUserId(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
             <ChevronLeft size={24} />
           </button>
           <div>
-            <h2 className="text-xl font-black text-slate-800 tracking-tight">{user?.displayName || 'Utilisateur'}</h2>
+            <h2 className="text-xl font-black text-slate-200 tracking-tight">{user?.displayName || 'Utilisateur'}</h2>
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{userObs.length} Observations</p>
           </div>
         </header>
@@ -531,7 +532,7 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
             <div 
               key={obs.id} 
               onClick={() => onObservationClick(obs)}
-              className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm cursor-pointer hover:border-emerald-200 transition-colors group"
+              className="bg-[#161c18] rounded-2xl border border-white/5 overflow-hidden shadow-none cursor-pointer hover:border-emerald-500/30 transition-colors group"
             >
               <div className="relative">
                 <img src={obs.imageUrl} alt="" className="w-full aspect-square object-cover" />
@@ -541,7 +542,7 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
                   </div>
                 )}
                 {obs.isDeletedByCreator && (
-                  <div className="absolute top-2 left-2 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-widest z-10 flex items-center gap-1">
+                  <div className="absolute top-2 left-2 bg-red-500/100 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-widest z-10 flex items-center gap-1">
                     <Trash2 size={10} />
                     Supprimé par l'utilisateur
                   </div>
@@ -551,7 +552,7 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
                 </div>
               </div>
               <div className="p-3">
-                <p className="font-bold text-xs text-slate-800 truncate">{obs.variety}</p>
+                <p className="font-bold text-xs text-slate-200 truncate">{obs.variety}</p>
                 <p className="text-[8px] text-slate-400 uppercase font-bold">{obs.family}</p>
               </div>
             </div>
@@ -572,7 +573,7 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
     <div className="p-6 space-y-8 pb-32" dir={isArabic ? 'rtl' : 'ltr'}>
       <header className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.admin}</h2>
+          <h2 className="text-2xl font-black text-slate-200 tracking-tight">{t.admin}</h2>
           <div className="flex items-center gap-2">
             <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{users.length} {t.users}</p>
             {lastUpdated && (
@@ -585,40 +586,40 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
         <button 
           onClick={() => fetchData(true)}
           disabled={isRefreshing}
-          className="p-3 bg-slate-100 text-slate-600 rounded-2xl hover:bg-slate-200 transition-all active:scale-95 disabled:opacity-50 shadow-sm border border-slate-200"
+          className="p-3 bg-white/5 text-slate-400 rounded-2xl hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50 shadow-none border border-white/10"
           title="Actualiser les données"
         >
-          <RefreshCw size={20} className={isRefreshing ? 'animate-spin text-emerald-600' : ''} />
+          <RefreshCw size={20} className={isRefreshing ? 'animate-spin text-emerald-400' : ''} />
         </button>
       </header>
 
       {pendingUsers.length > 0 && (
         <section className="space-y-4">
-          <h3 className="text-xs font-bold text-amber-600 uppercase tracking-widest flex items-center gap-2">
+          <h3 className="text-xs font-bold text-amber-400 uppercase tracking-widest flex items-center gap-2">
             <Info size={14} /> {t.pendingUsers}
           </h3>
           <div className="space-y-3">
             {pendingUsers.map(user => (
-              <div key={user.id} className="p-4 bg-white rounded-2xl border border-amber-100 shadow-sm">
+              <div key={user.id} className="p-4 bg-[#161c18] rounded-2xl border border-amber-500/20 shadow-none">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className="font-bold text-slate-800">{user.displayName || 'Utilisateur'}</p>
+                    <p className="font-bold text-slate-200">{user.displayName || 'Utilisateur'}</p>
                     <p className="text-xs text-slate-500">{user.email}</p>
                   </div>
-                  <span className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[8px] font-bold rounded-full border border-amber-100 uppercase">
+                  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-400 text-[8px] font-bold rounded-full border border-amber-500/20 uppercase">
                     {user.accessStatus}
                   </span>
                 </div>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => handleUpdateStatus(user.id, 'approved')}
-                    className="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-colors"
+                    className="flex-1 py-2 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(52,211,153,0.2)] tracking-widest hover:bg-emerald-700 transition-colors"
                   >
                     {t.approve}
                   </button>
                   <button 
                     onClick={() => handleUpdateStatus(user.id, 'rejected')}
-                    className="flex-1 py-2 bg-red-50 text-red-600 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors"
+                    className="flex-1 py-2 bg-red-500/100/10 text-red-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors"
                   >
                     {t.reject}
                   </button>
@@ -638,19 +639,19 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
               <div 
                 key={user.id} 
                 onClick={() => setSelectedUserId(user.uid)}
-                className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center cursor-pointer hover:border-emerald-200 transition-colors"
+                className="p-4 bg-[#161c18] rounded-2xl border border-white/5 shadow-none flex justify-between items-center cursor-pointer hover:border-emerald-500/30 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                  <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-slate-500">
                     <UserIcon size={20} />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800 text-sm">{user.displayName || 'Utilisateur'}</p>
+                    <p className="font-bold text-slate-200 text-sm">{user.displayName || 'Utilisateur'}</p>
                     <p className="text-[10px] text-slate-400">{user.email}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{userObsCount} Obs.</p>
+                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">{userObsCount} Obs.</p>
                   <ChevronRight size={16} className="text-slate-300 ml-auto" />
                 </div>
               </div>
@@ -661,24 +662,24 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
 
       <section className="space-y-4">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t.allUsers}</h3>
-        <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+        <div className="bg-[#161c18] rounded-3xl border border-white/5 overflow-hidden shadow-none">
           {otherUsers.map((user, i) => (
             <div key={user.id} className={`p-4 flex items-center justify-between ${i !== otherUsers.length - 1 ? 'border-b border-slate-50' : ''}`}>
               <div className="flex-1 min-w-0 mr-4">
-                <p className="font-bold text-slate-800 truncate">{user.displayName || 'Utilisateur'}</p>
+                <p className="font-bold text-slate-200 truncate">{user.displayName || 'Utilisateur'}</p>
                 <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
               </div>
               <div className="flex items-center gap-3">
                 <select 
                   value={user.role}
                   onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                  className="text-[10px] font-bold bg-slate-50 border-none rounded-lg px-2 py-1 focus:ring-0"
+                  className="text-[10px] font-bold bg-[#0d120f] border-none rounded-lg px-2 py-1 focus:ring-0"
                 >
                   <option value="viewer">Viewer</option>
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
-                <div className={`w-2 h-2 rounded-full ${user.accessStatus === 'approved' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                <div className={`w-2 h-2 rounded-full ${user.accessStatus === 'approved' ? 'bg-emerald-500' : 'bg-red-500/100'}`}></div>
               </div>
             </div>
           ))}
@@ -765,9 +766,9 @@ function WeatherCard({
     <motion.div 
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-5 bg-white rounded-3xl shadow-xl shadow-blue-900/5 border border-blue-50 overflow-hidden relative"
+      className="p-5 bg-[#161c18] rounded-3xl shadow-xl shadow-blue-900/5 border border-blue-500/20 overflow-hidden relative"
     >
-      <div className="absolute top-0 right-0 p-6 opacity-5 text-blue-600 pointer-events-none">
+      <div className="absolute top-0 right-0 p-6 opacity-5 text-blue-400 pointer-events-none">
         <Cloud size={80} />
       </div>
       
@@ -780,14 +781,14 @@ function WeatherCard({
               </h3>
               <button 
                 onClick={() => setIsSearching(!isSearching)}
-                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+                className="p-1 hover:bg-white/5 rounded-full text-slate-400 transition-colors"
                 title="Rechercher un site"
               >
                 <Search size={14} />
               </button>
               <button 
                 onClick={handleToggleSave}
-                className={`p-1 rounded-full transition-colors ${isCurrentSaved ? 'text-yellow-500 hover:bg-yellow-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                className={`p-1 rounded-full transition-colors ${isCurrentSaved ? 'text-yellow-500 hover:bg-yellow-50' : 'text-slate-400 hover:bg-white/5'}`}
                 title="Sauvegarder ce site"
               >
                 <Star size={14} fill={isCurrentSaved ? 'currentColor' : 'none'} />
@@ -803,9 +804,9 @@ function WeatherCard({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t.searchLocation}
-                    className="flex-1 text-xs p-2 bg-slate-50 border border-slate-100 rounded-xl focus:ring-0 focus:outline-none"
+                    className="flex-1 text-xs p-2 bg-[#0d120f] border border-white/5 rounded-xl focus:ring-0 focus:outline-none"
                   />
-                  <button type="submit" className="p-2 bg-blue-500 text-white rounded-xl">
+                  <button type="submit" className="p-2 bg-blue-500/100 text-white rounded-xl">
                     <ChevronRight size={14} />
                   </button>
                 </div>
@@ -819,7 +820,7 @@ function WeatherCard({
                           onSelectSavedLocation(loc);
                           setIsSearching(false);
                         }}
-                        className="px-2 py-1 bg-slate-100 font-medium text-slate-600 rounded-lg text-[10px] hover:bg-slate-200 transition-colors"
+                        className="px-2 py-1 bg-white/5 font-medium text-slate-400 rounded-lg text-[10px] hover:bg-white/10 transition-colors"
                       >
                         {loc.name}
                       </button>
@@ -829,7 +830,7 @@ function WeatherCard({
               </form>
             ) : (
               <div className="mb-2">
-                <p className="text-sm font-black text-slate-800 tracking-tight flex items-center gap-1">
+                <p className="text-sm font-black text-slate-200 tracking-tight flex items-center gap-1">
                   <MapPin size={12} className="text-blue-500" />
                   {weather.locationName || t.nearestSite}
                 </p>
@@ -838,7 +839,7 @@ function WeatherCard({
             )}
 
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-slate-800 tracking-tighter">{isLoading ? '...' : (weather.current.temp ?? '--')}</span>
+              <span className="text-4xl font-black text-slate-200 tracking-tighter">{isLoading ? '...' : (weather.current.temp ?? '--')}</span>
               <span className="text-sm font-bold text-slate-400 uppercase">{weather.current.condition ?? '--'}</span>
             </div>
           </div>
@@ -848,13 +849,13 @@ function WeatherCard({
         <div className="flex gap-2 mb-4">
           <button 
             onClick={() => setViewMode('history')}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${viewMode === 'history' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${viewMode === 'history' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'bg-white/5 text-slate-500 hover:bg-white/10'}`}
           >
             Historique (30J)
           </button>
           <button 
             onClick={() => setViewMode('forecast')}
-            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${viewMode === 'forecast' ? 'bg-blue-500 text-white' : 'bg-blue-50 text-blue-500 hover:bg-blue-100'}`}
+            className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${viewMode === 'forecast' ? 'bg-blue-500/100 text-white' : 'bg-blue-500/10 text-blue-500 hover:bg-blue-100'}`}
           >
             Prévisions (15J)
           </button>
@@ -864,7 +865,7 @@ function WeatherCard({
           <select 
             value={selectedIndicator}
             onChange={(e) => setSelectedIndicator(e.target.value as any)}
-            className="w-full p-2 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-bold text-slate-600 focus:ring-0 focus:outline-none"
+            className="w-full p-2 bg-[#0d120f] rounded-xl border border-white/5 text-[10px] font-bold text-slate-400 focus:ring-0 focus:outline-none"
           >
             {indicators.map(ind => (
               <option key={ind.key} value={ind.key}>{ind.label}</option>
@@ -900,11 +901,11 @@ function WeatherCard({
 
         <div className="flex gap-2 overflow-x-auto pb-2 snap-x">
           {displayData.map((day, i) => (
-            <div key={i} className="text-center p-2 bg-slate-50 rounded-2xl border border-slate-100 shrink-0 min-w-[70px] snap-center">
+            <div key={i} className="text-center p-2 bg-[#0d120f] rounded-2xl border border-white/5 shrink-0 min-w-[70px] snap-center">
               <p className="text-[7px] font-bold text-slate-400 mb-1">
                 {day?.date ? new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit' }) : '--'}
               </p>
-              <p className="text-xs font-black text-slate-700">{day?.tempAvg ?? '--'}°</p>
+              <p className="text-xs font-black text-slate-300">{day?.tempAvg ?? '--'}°</p>
               <p className="text-[7px] font-bold text-blue-500 uppercase truncate mt-1">{day?.condition ?? '--'}</p>
             </div>
           ))}
@@ -2456,13 +2457,13 @@ export default function App() {
 
   if (!isAuthReady) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#0d120f] flex items-center justify-center p-6">
         <div className="text-center space-y-4">
           {quotaExceeded ? (
-            <div className="p-6 bg-white rounded-3xl shadow-xl border border-red-100 max-w-sm">
-              <AlertCircle size={40} className="text-red-500 mx-auto mb-4" />
-              <p className="text-slate-800 font-bold mb-2">{t.quotaExceeded}</p>
-              <button onClick={() => window.location.reload()} className="text-emerald-600 font-bold text-sm hover:underline">{t.retry}</button>
+            <div className="p-6 bg-[#161c18] rounded-3xl shadow-xl border border-red-500/20 max-w-sm">
+              <AlertCircle size={40} className="text-red-400 mx-auto mb-4" />
+              <p className="text-slate-200 font-bold mb-2">{t.quotaExceeded}</p>
+              <button onClick={() => window.location.reload()} className="text-emerald-400 font-bold text-sm hover:underline">{t.retry}</button>
             </div>
           ) : (
             <>
@@ -2476,25 +2477,28 @@ export default function App() {
   }
 
   if (!user || authMode === 'verifyEmail') {
+    const titleParts = t.title.split(' ');
+    const title1 = titleParts[0] || 'AgroScan';
+    const title2 = titleParts.slice(1).join(' ') || 'IA';
+
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#111412] flex items-center justify-center p-6 font-sans">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-2xl shadow-emerald-900/10 border border-emerald-100 text-center relative overflow-hidden"
+          className="w-full max-w-[380px] bg-[#161c18] rounded-[40px] p-10 shadow-2xl border border-white/5 text-center relative overflow-hidden"
           dir={isArabic ? 'rtl' : 'ltr'}
         >
-          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
           {/* Removed Google authentication info overlay */}
           
           {quotaExceeded && (
-            <div className="mb-6 p-5 bg-red-50 border border-red-200 rounded-3xl space-y-2">
-              <div className="flex items-center gap-3 text-red-600 font-bold">
+            <div className="mb-6 p-5 bg-red-950/30 border border-red-900/50 rounded-3xl space-y-2">
+              <div className="flex items-center gap-3 text-red-400 font-bold">
                 <AlertCircle size={20} />
                 <span>{t.quotaExceeded}</span>
               </div>
-              <p className="text-xs text-red-500 leading-relaxed">
+              <p className="text-xs text-red-400/80 leading-relaxed text-left">
                 Votre projet Google Cloud semble avoir un "Quota Cap" (Plafonnement) actif. 
                 Allez dans la console Google Cloud &gt; Quotas &gt; Cloud Firestore API et augmentez la limite "Read requests per day".
               </p>
@@ -2502,41 +2506,41 @@ export default function App() {
           )}
           {authMode === 'verifyEmail' ? (
             <div className="space-y-6">
-              <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Mail className="text-blue-600" size={40} />
+              <div className="w-20 h-20 bg-blue-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-900/50">
+                <Mail className="text-blue-400" size={40} />
               </div>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.verifyEmail}</h2>
-              <p className="text-slate-500 font-medium leading-relaxed">
+              <h2 className="text-2xl font-black text-white tracking-tight">{t.verifyEmail}</h2>
+              <p className="text-slate-400 text-sm font-medium leading-relaxed">
                 {t.verifyEmailDesc}
               </p>
               <button 
                 onClick={handleLogout}
-                className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                className="w-full py-4 bg-[#161c18]/5 text-slate-300 rounded-full font-bold hover:bg-[#161c18]/10 transition-all border border-white/10"
               >
                 {t.back}
               </button>
             </div>
           ) : authMode === 'forgotPassword' ? (
-            <div className="space-y-6">
+            <div className="space-y-6 relative">
               <button 
                 onClick={() => setAuthMode('login')}
-                className="absolute top-8 left-8 p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="absolute -top-4 -left-4 p-2 hover:bg-[#161c18]/5 rounded-full transition-colors"
               >
-                <ArrowLeft size={20} className="text-slate-400" />
+                <ArrowLeft size={20} className="text-slate-500" />
               </button>
-              <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Lock className="text-amber-600" size={40} />
+              <div className="w-20 h-20 bg-amber-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-900/50">
+                <Lock className="text-amber-400" size={32} />
               </div>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">{t.resetPassword}</h2>
+              <h2 className="text-2xl font-black text-white tracking-tight">{t.resetPassword}</h2>
               <div className="space-y-4">
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                   <input 
                     type="email" 
                     placeholder={t.email}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                   />
                 </div>
                 <button 
@@ -2553,109 +2557,123 @@ export default function App() {
                     }
                   }}
                   disabled={isAuthLoading}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all disabled:opacity-50"
+                  className="w-full py-4 bg-emerald-600 text-white rounded-full font-black shadow-[0_0_15px_rgba(5,150,105,0.4)] hover:bg-emerald-500 transition-all disabled:opacity-50"
                 >
                   {isAuthLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : t.sendResetEmail}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="space-y-8">
-              <div className="w-20 h-20 bg-emerald-50 rounded-3xl flex items-center justify-center mx-auto mb-4 rotate-3 shadow-inner">
-                <Globe className="text-emerald-600" size={40} />
+            <div className="space-y-6">
+              <div className="w-20 h-20 bg-[#121c15] rounded-full flex items-center justify-center mx-auto mb-2 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative">
+                <Leaf className="text-emerald-400 relative z-10" size={36} />
+                <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-md"></div>
               </div>
-              <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tighter mb-1">{t.title}</h1>
-                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">{authMode === 'login' ? t.login : t.signup}</p>
+              
+              <div className="space-y-1 mb-8">
+                <h1 className="text-3xl font-black tracking-tight mb-2 flex justify-center gap-2">
+                  <span className="text-white uppercase">{title1}</span>
+                  <span className="text-emerald-400 uppercase">{title2}</span>
+                </h1>
+                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{t.subtitle}</p>
+              </div>
+
+              <div className="text-slate-400 text-xs leading-relaxed mb-6 px-2 font-medium">
+                {language === 'fr' 
+                  ? "Connectez votre profil neural pour commencer à surveiller vos actifs botaniques avec une analyse de croissance pilotée par l'IA et un suivi de santé en temps réel."
+                  : language === 'en'
+                  ? "Connect your neural profile to begin monitoring your botanical assets with AI-driven growth analysis and real-time health tracking."
+                  : "قم بتوصيل ملفك العصبي لبدء مراقبة أصولك النباتية من خلال تحليل النمو المدفوع بالذكاء الاصطناعي وتتبع الصحة في الوقت الفعلي."}
               </div>
 
               {authError && (
                 authError.includes('auth/unauthorized-domain') || authError.includes('unauthorized-domain') ? (
-                  <div className="p-5 bg-amber-50 border border-amber-200 rounded-3xl flex flex-col gap-3 text-amber-900 text-xs text-left">
-                    <div className="flex items-center gap-2 font-bold text-amber-700">
+                  <div className="p-4 bg-amber-950/30 border border-amber-900/50 rounded-2xl flex flex-col gap-3 text-amber-400 text-xs text-left mb-6">
+                    <div className="flex items-center gap-2 font-bold">
                       <AlertCircle className="shrink-0" size={18} />
-                      <span>Domaine non autorisé (auth/unauthorized-domain)</span>
+                      <span>Domaine non autorisé</span>
                     </div>
-                    <p className="opacity-95 leading-relaxed font-semibold">
-                      Le domaine de cette application n'interagit pas correctement avec vos paramètres Firebase. Veuillez configurer l'accès dans votre console Firebase :
+                    <p className="opacity-90 leading-relaxed font-medium">
+                      Le domaine n'est pas autorisé dans Firebase.
                     </p>
-                    <div className="bg-white/90 border border-amber-100 p-3 rounded-2xl flex flex-col gap-2 text-slate-700">
-                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Étape 1 : Copiez le domaine actuel</p>
-                      <div className="flex justify-between items-center bg-slate-50 p-2 rounded-xl border border-slate-100 gap-2">
-                        <span className="font-mono text-[10px] break-all select-all font-semibold text-slate-600">{window.location.hostname}</span>
-                        <button 
-                          onClick={() => {
-                            navigator.clipboard.writeText(window.location.hostname);
-                            alert("Domaine copié !");
-                          }}
-                          className="px-2 py-1 bg-emerald-600 text-white text-[10px] font-bold rounded-lg hover:bg-emerald-700 active:scale-95 transition-all shrink-0 cursor-pointer"
-                        >
-                          Copier
-                        </button>
-                      </div>
-                      <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mt-1">Étape 2 : Ajoutez-le sur Firebase</p>
-                      <ol className="list-decimal pl-4 space-y-1 text-[11px] font-semibold text-slate-600 leading-relaxed">
-                        <li>Allez sur le site de la <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-black">Console Firebase</a></li>
-                        <li>Sélectionnez votre projet : <span className="font-mono bg-slate-100 px-1 py-0.5 rounded text-red-600">openclaw-bot-494215</span></li>
-                        <li>Allez dans le menu <span className="font-bold">Authentication</span> &gt; onglet <span className="font-bold">Settings</span> (Paramètres) &gt; <span className="font-bold">Authorized domains</span> (Domaines autorisés)</li>
-                        <li>Cliquez sur <span className="font-bold">Add domain</span> (Ajouter un domaine) et collez le domaine copié ci-dessus.</li>
-                      </ol>
-                    </div>
-                    <button 
-                      onClick={() => window.location.reload()}
-                      className="w-full py-2 bg-amber-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-amber-700 transition"
-                    >
-                      Actualiser la page
-                    </button>
                   </div>
                 ) : (
-                  <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-xs font-bold">
-                    <AlertCircle size={16} />
-                    {authError.includes('auth/invalid-credential') ? t.invalidCredentials : 
-                     authError.includes('auth/too-many-requests') ? t.accountLocked : 
-                     authError.includes('auth/network-request-failed') ? t.networkIssue : t.authError}
+                  <div className="p-4 bg-red-950/30 border border-red-900/50 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold mb-6">
+                    <AlertCircle size={16} className="shrink-0" />
+                    <span className="text-left">
+                      {authError.includes('auth/invalid-credential') ? t.invalidCredentials : 
+                       authError.includes('auth/too-many-requests') ? t.accountLocked : 
+                       authError.includes('auth/network-request-failed') ? t.networkIssue : t.authError}
+                    </span>
                   </div>
                 )
               )}
 
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={async () => {
+                    setIsAuthLoading(true);
+                    setAuthError(null);
+                    setIsGoogleConnecting(true);
+                    try {
+                      await signInWithGoogle();
+                    } catch (e: any) {
+                      setAuthError(e.code || e.message || String(e));
+                      setIsGoogleConnecting(false);
+                    } finally {
+                      setIsAuthLoading(false);
+                    }
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-400 to-[#124227] text-black rounded-full font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-[0_0_15px_rgba(52,211,153,0.2)]"
+                >
+                  <Globe size={18} className="opacity-80" />
+                  {t.connect?.toUpperCase() || "CONNECT WITH GOOGLE"}
+                </button>
+              </div>
+
+              <div className="relative mt-8 mb-6">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-[#161c18] px-4 text-slate-400">Ou utiliser un email</span></div>
+              </div>
+
               <div className="space-y-4">
                 {authMode === 'signup' && (
                   <div className="relative">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <UserIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                     <input 
                       type="text" 
                       placeholder="Nom complet"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                     />
                   </div>
                 )}
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                   <input 
                     type="email" 
                     placeholder={t.email}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                   />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
                   <input 
                     type="password" 
                     placeholder={t.password}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 rounded-2xl border border-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
                   />
                 </div>
 
                 {authMode === 'login' && (
                   <button 
                     onClick={() => setAuthMode('forgotPassword')}
-                    className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest hover:underline block ml-auto"
+                    className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest hover:text-emerald-400 hover:underline block ml-auto px-2"
                   >
                     {t.forgotPassword}
                   </button>
@@ -2679,59 +2697,35 @@ export default function App() {
                     }
                   }}
                   disabled={isAuthLoading}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all disabled:opacity-50"
+                  className="w-full py-4 bg-[#161c18]/5 text-white rounded-full font-black border border-white/10 hover:bg-[#161c18]/10 transition-all disabled:opacity-50"
                 >
                   {isAuthLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : (authMode === 'login' ? t.login : t.signup)}
                 </button>
               </div>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-                <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-white px-4 text-slate-400">Ou</span></div>
+              <div className="pt-6">
+                <p className="text-[#374151] text-[9px] font-black uppercase tracking-[0.2em] mb-4">
+                  SÉCURITÉ REQUISE
+                </p>
+                <p className="text-xs text-slate-500 font-medium">
+                  {authMode === 'login' ? "Pas encore de compte ?" : "Déjà un compte ?"}
+                  <button 
+                    onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
+                    className="ml-2 text-emerald-500 font-bold hover:text-emerald-400 hover:underline"
+                  >
+                    {authMode === 'login' ? t.signup : t.login}
+                  </button>
+                </p>
               </div>
-
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={async () => {
-                    setIsAuthLoading(true);
-                    setAuthError(null);
-                    setIsGoogleConnecting(true);
-                    try {
-                      await signInWithGoogle();
-                    } catch (e: any) {
-                      setAuthError(e.code || e.message || String(e));
-                      setIsGoogleConnecting(false);
-                    } finally {
-                      setIsAuthLoading(false);
-                    }
-                  }}
-                  className="w-full py-4 bg-white text-slate-600 rounded-2xl font-bold border border-slate-200 flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm"
-                >
-                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="" />
-                  Continuer avec Google
-                </button>
-
-
-              </div>
-
-              <p className="text-xs text-slate-400 font-medium">
-                {authMode === 'login' ? "Pas encore de compte ?" : "Dj un compte ?"}
-                <button 
-                  onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                  className="ml-2 text-emerald-600 font-bold hover:underline"
-                >
-                  {authMode === 'login' ? t.signup : t.login}
-                </button>
-              </p>
             </div>
           )}
 
-          <div className="mt-10 flex justify-center gap-4">
+          <div className="mt-8 flex justify-center gap-2">
             {['fr', 'en', 'ar'].map((lang) => (
               <button 
                 key={lang}
                 onClick={() => setLanguage(lang as any)}
-                className={`px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${language === lang ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400 hover:bg-slate-50'}`}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${language === lang ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-400'}`}
               >
                 {lang}
               </button>
@@ -2744,27 +2738,27 @@ export default function App() {
 
   if (!user.isAnonymous && (!userData || (userData.accessStatus !== 'approved' && !isAdmin))) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-[#0d120f] flex items-center justify-center p-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-[40px] p-10 shadow-2xl shadow-emerald-900/10 border border-emerald-100 text-center"
+          className="w-full max-w-md bg-[#161c18] rounded-[40px] p-10 shadow-2xl shadow-emerald-900/10 border border-emerald-500/20 text-center"
           dir={isArabic ? 'rtl' : 'ltr'}
         >
-          <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <Info className="text-amber-600" size={40} />
+          <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+            <Info className="text-amber-400" size={40} />
           </div>
           
           {(!userData || userData.accessStatus === 'pending') ? (
             <>
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-4">{t.accessPending}</h2>
+              <h2 className="text-2xl font-black text-slate-200 tracking-tight mb-4">{t.accessPending}</h2>
               <p className="text-slate-500 font-medium mb-8 leading-relaxed">
                 {t.accessPendingDesc}
               </p>
               {!userData && (
                 <button 
                   onClick={handleRequestAccess}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg hover:bg-emerald-700 transition-all active:scale-95"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-black hover:opacity-90 shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-all active:scale-95"
                 >
                   {t.requestAccess}
                 </button>
@@ -2781,7 +2775,7 @@ export default function App() {
 
           <button 
             onClick={handleLogout}
-            className="mt-6 text-slate-400 font-bold uppercase tracking-widest text-[10px] hover:text-slate-600 flex items-center justify-center gap-2 mx-auto"
+            className="mt-6 text-slate-400 font-bold uppercase tracking-widest text-[10px] hover:text-slate-400 flex items-center justify-center gap-2 mx-auto"
           >
             <LogOut size={14} /> {t.logout}
           </button>
@@ -2791,28 +2785,28 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-slate-200" dir={isArabic ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <header className="p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-50">
+      <header className="p-6 bg-[#161c18] border-b border-white/5 flex justify-between items-center sticky top-0 z-50">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-emerald-900">AgroScan IA</h1>
-          <div className="flex items-center gap-2">
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Agronomie</p>
-            {!isOnline && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-bold rounded">OFFLINE</span>}
+          <h1 className="text-2xl font-bold tracking-tight flex gap-1 text-white">AgroScan <span className="text-emerald-400">IA</span></h1>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.1em]">AGRONOMIE</p>
+            {!isOnline && <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[8px] font-bold rounded">OFFLINE</span>}
             {firebaseStatus === 'connected' && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" title="Firebase Connect"></span>}
             {firebaseStatus === 'offline' && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" title="Mode Hors-ligne (Actif)"></span>}
-            {firebaseStatus === 'error' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" title="Erreur Firebase"></span>}
+            {firebaseStatus === 'error' && <span className="w-1.5 h-1.5 bg-red-500/100 rounded-full" title="Erreur Firebase"></span>}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button onClick={() => setLanguage('en')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'en' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>EN</button>
-            <button onClick={() => setLanguage('fr')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'fr' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>FR</button>
-            <button onClick={() => setLanguage('ar')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'ar' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>AR</button>
+          <div className="flex bg-[#0d120f] p-1 rounded-xl border border-white/5">
+            <button onClick={() => setLanguage('en')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'en' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500'}`}>EN</button>
+            <button onClick={() => setLanguage('fr')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'fr' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500'}`}>FR</button>
+            <button onClick={() => setLanguage('ar')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'ar' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500'}`}>AR</button>
           </div>
           <button 
             onClick={handleLogout}
-            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="w-10 h-10 rounded-full bg-[#0d120f] border border-white/5 flex items-center justify-center text-slate-400 hover:bg-red-500/100/10 hover:text-red-400 transition-colors"
           >
             <LogOut size={18} />
           </button>
@@ -2820,11 +2814,11 @@ export default function App() {
       </header>
 
       {quotaExceeded && (
-        <div className="p-4 bg-red-50 border-b border-red-100 flex items-start gap-3">
-          <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
+        <div className="p-4 bg-red-500/10 border-b border-red-500/20 flex items-start gap-3">
+          <AlertCircle size={18} className="text-red-400 mt-0.5 shrink-0" />
           <div className="space-y-1">
-            <p className="text-xs font-bold text-red-700">{t.quotaExceeded}</p>
-            <p className="text-[10px] text-red-600 leading-tight">
+            <p className="text-xs font-bold text-red-400">{t.quotaExceeded}</p>
+            <p className="text-[10px] text-red-400 leading-tight">
               Votre projet Google Cloud a atteint sa limite de lecture gratuite (50k/jour). 
               Veuillez augmenter le "Quota Cap" dans la console Google Cloud.
             </p>
@@ -2833,26 +2827,26 @@ export default function App() {
       )}
 
       {offlineObservations.length > 0 && (
-        <div className={`p-4 border-b flex items-center justify-between transition-colors ${isSyncing ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+        <div className={`p-4 border-b flex items-center justify-between transition-colors ${isSyncing ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20'}`}>
           <div className="flex items-center gap-3">
             {isSyncing ? (
               <RefreshCw size={18} className="text-emerald-500 animate-spin" />
             ) : (
-              <Cloud size={18} className="text-amber-500" />
+              <Cloud size={18} className="text-amber-400" />
             )}
             <div>
-              <p className={`text-xs font-bold uppercase tracking-wider ${isSyncing ? 'text-emerald-700' : 'text-amber-700'}`}>
+              <p className={`text-xs font-bold uppercase tracking-wider ${isSyncing ? 'text-emerald-400' : 'text-amber-400'}`}>
                 {isSyncing ? "Synchronisation en cours..." : `${offlineObservations.length} observations en attente`}
               </p>
               {!isOnline && (
-                <p className="text-[10px] text-amber-600 font-medium">En attente de connexion internet</p>
+                <p className="text-[10px] text-amber-400 font-medium">En attente de connexion internet</p>
               )}
             </div>
           </div>
           {isOnline && !isSyncing && (
             <button 
               onClick={() => syncOfflineData()}
-              className="px-3 py-1.5 bg-amber-600 text-white text-[10px] font-bold rounded-xl uppercase tracking-widest hover:bg-amber-700 transition-colors shadow-sm"
+              className="px-3 py-1.5 bg-amber-600 text-white text-[10px] font-bold rounded-xl uppercase tracking-widest hover:bg-amber-700 transition-colors shadow-none"
             >
               Synchroniser
             </button>
@@ -2861,7 +2855,7 @@ export default function App() {
       )}
 
       {deferredPrompt && (
-        <div className="p-4 bg-emerald-600 text-white flex items-center justify-between select-none">
+        <div className="p-4 bg-[#161c18] border-b border-white/5 text-emerald-400 flex items-center justify-between select-none">
           <div className="flex items-center gap-3">
             <Download size={20} className="shrink-0" />
             <div>
@@ -2876,11 +2870,11 @@ export default function App() {
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') setDeferredPrompt(null);
               }}
-              className="px-4 py-1.5 bg-white text-emerald-700 text-xs font-black rounded-lg uppercase tracking-widest shadow-sm hover:scale-105 transition-transform"
+              className="px-4 py-1.5 bg-[#161c18] text-emerald-400 text-xs font-black rounded-lg uppercase tracking-widest shadow-none hover:scale-105 transition-transform"
             >
               Installer
             </button>
-            <button onClick={() => setDeferredPrompt(null)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+            <button onClick={() => setDeferredPrompt(null)} className="p-1 hover:bg-[#161c18]/20 rounded-full transition-colors">
               <X size={16} />
             </button>
           </div>
@@ -2894,17 +2888,17 @@ export default function App() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-4 bg-emerald-50 border-b border-emerald-100 space-y-2"
+            className="p-4 bg-emerald-500/10 border-b border-emerald-500/20 space-y-2"
           >
             {backgroundTasks.map(task => (
               <div key={task.id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
                     {task.type === 'upload' ? `Envoi des photos (${task.progress}%)...` : 'Analyse IA en cours...'}
                   </span>
                 </div>
-                <div className="text-[10px] font-bold text-emerald-600 bg-white px-2 py-0.5 rounded-full border border-emerald-100">
+                <div className="text-[10px] font-bold text-emerald-400 bg-[#161c18] px-2 py-0.5 rounded-full border border-emerald-500/20">
                   ARRIRE-PLAN
                 </div>
               </div>
@@ -2925,7 +2919,7 @@ export default function App() {
             {canManage && (
               <button 
                 onClick={handleGlobalReset}
-                className="w-full p-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                className="w-full p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
               >
                 <RefreshCw size={14} /> {t.allUsersReset}
               </button>
@@ -2945,11 +2939,11 @@ export default function App() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl shadow-xl shadow-emerald-900/5 border border-emerald-100 overflow-hidden"
+                className="bg-[#161c18] rounded-2xl shadow-xl shadow-emerald-900/5 border border-emerald-500/20 overflow-hidden"
               >
                 {/* Image Carousel */}
                 {(analysis as any).imageUrls && (analysis as any).imageUrls.length > 0 && (
-                  <div className="relative aspect-video bg-slate-900 group">
+                  <div className="relative aspect-video bg-[#0d120f] group">
                     <img 
                       src={(analysis as any).imageUrls[currentImageIndex]} 
                       alt="" 
@@ -2963,7 +2957,7 @@ export default function App() {
                             <button 
                               key={i}
                               onClick={() => setCurrentImageIndex(i)}
-                              className={`w-2 h-2 rounded-full transition-all ${currentImageIndex === i ? 'bg-white w-4' : 'bg-white/40'}`}
+                              className={`w-2 h-2 rounded-full transition-all ${currentImageIndex === i ? 'bg-[#161c18] w-4' : 'bg-[#161c18]/40'}`}
                             />
                           ))}
                         </div>
@@ -2984,7 +2978,7 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="bg-emerald-600 p-4 text-white flex justify-between items-center">
+                <div className="bg-[#161c18] border-b border-white/5 p-4 text-emerald-400 flex justify-between items-center">
                   <div>
                     <h2 className="text-xl font-bold flex items-center gap-2">
                       {analysis.variety}
@@ -2995,14 +2989,14 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     <button 
                       onClick={() => setShowTrend(!showTrend)}
-                      className={`p-2 rounded-lg transition-colors ${showTrend ? 'bg-white text-emerald-600' : 'bg-white/20 hover:bg-white/30'}`}
+                      className={`p-2 rounded-lg transition-colors ${showTrend ? 'bg-[#161c18] text-emerald-400' : 'bg-[#161c18]/20 hover:bg-[#161c18]/30'}`}
                       title="Tendance de récolte"
                     >
                       <TrendingUp size={18} />
                     </button>
                     <button 
                       onClick={() => { setAnalysis(null); setEditingId(null); setShowTrend(false); }}
-                      className="p-2 bg-white/20 rounded-lg hover:bg-white/30"
+                      className="p-2 bg-[#161c18]/20 rounded-lg hover:bg-[#161c18]/30"
                     >
                       <X size={18} />
                     </button>
@@ -3011,7 +3005,7 @@ export default function App() {
                 
                 <div className="p-5 space-y-6">
                   {showTrend && trendData.length > 0 && (
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="p-4 bg-[#0d120f] rounded-2xl border border-white/5">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-4">évolution de la récolte (Kg/pot)</h4>
                       <div className="h-48 w-full min-w-0 flex items-center justify-center">
                         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
@@ -3029,46 +3023,46 @@ export default function App() {
                     </div>
                   )}
                   {analysis.status === 'pending' && (
-                    <div className="p-4 bg-amber-50 text-amber-800 rounded-xl border border-amber-100 text-sm flex items-start gap-3">
+                    <div className="p-4 bg-amber-500/10 text-amber-800 rounded-xl border border-amber-500/20 text-sm flex items-start gap-3">
                       <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mt-0.5"></div>
                       <p>L'analyse IA est en cours en arrire-plan. Vous pouvez continuer  utiliser l'application, les rsultats apparatront ici une fois termins.</p>
                     </div>
                   )}
                   {analysis.status === 'error' && (
-                    <div className="p-4 bg-red-50 text-red-800 rounded-xl border border-red-100 text-sm flex items-start gap-3">
-                      <X size={20} className="text-red-500 mt-0.5" />
+                    <div className="p-4 bg-red-500/10 text-red-800 rounded-xl border border-red-500/20 text-sm flex items-start gap-3">
+                      <X size={20} className="text-red-400 mt-0.5" />
                       <p>L'analyse IA a échoué. {analysis.description}</p>
                     </div>
                   )}
                   {analysis.domain && (
-                    <div className="flex items-center gap-2 p-3 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100">
-                      <MapIcon size={16} className="text-emerald-600" />
+                    <div className="flex items-center gap-2 p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                      <MapIcon size={16} className="text-emerald-400" />
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-emerald-600/70">Domaine / Site</p>
+                        <p className="text-[10px] uppercase font-bold text-emerald-400/70">Domaine / Site</p>
                         <p className="text-sm font-medium">{analysis.domain}</p>
                       </div>
                     </div>
                   )}
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-[#0d120f] rounded-xl border border-white/5">
                       <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Famille</p>
                       <p className="text-sm font-medium">{analysis.family}</p>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="p-3 bg-[#0d120f] rounded-xl border border-white/5">
                       <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Santé</p>
-                      <p className="text-sm font-medium text-emerald-600">{analysis.phenotypicTraits?.healthStatus || "Non spécifié"}</p>
+                      <p className="text-sm font-medium text-emerald-400">{analysis.phenotypicTraits?.healthStatus || "Non spécifié"}</p>
                     </div>
                   </div>
 
                   {analysis.phenologicalStage && (
-                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 space-y-2">
-                      <h4 className="text-[10px] font-bold text-emerald-600 uppercase">Stade Phnologique</h4>
+                    <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20 space-y-2">
+                      <h4 className="text-[10px] font-bold text-emerald-400 uppercase">Stade Phnologique</h4>
                       <div className="flex justify-between items-end">
-                        <p className="text-lg font-bold text-emerald-900 leading-tight">{analysis.phenologicalStage}</p>
+                        <p className="text-lg font-bold text-emerald-400 leading-tight">{analysis.phenologicalStage}</p>
                         <div className="text-right">
-                          <p className="text-[10px] text-emerald-600/70 font-bold uppercase">Intensité / Qualité</p>
-                          <p className="text-xs font-medium text-emerald-800">{analysis.stageIntensity}  {analysis.stageQuality}</p>
+                          <p className="text-[10px] text-emerald-400/70 font-bold uppercase">Intensité / Qualité</p>
+                          <p className="text-xs font-medium text-emerald-400">{analysis.stageIntensity}  {analysis.stageQuality}</p>
                         </div>
                       </div>
                     </div>
@@ -3079,7 +3073,7 @@ export default function App() {
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase">Traits de Caractérisation</h4>
                       <div className="flex flex-wrap gap-2">
                         {analysis.characterizationTraits.map((trait, i) => (
-                          <span key={i} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-medium border border-slate-200">
+                          <span key={i} className="px-2 py-1 bg-white/5 text-slate-400 rounded-lg text-[10px] font-medium border border-white/10">
                             {trait}
                           </span>
                         ))}
@@ -3088,7 +3082,7 @@ export default function App() {
                   )}
 
                   {(analysis.plantingDate || analysis.breeder || analysis.pruningDate || analysis.harvestQuantity || analysis.density || analysis.fruitFirmness || analysis.defects) && (
-                    <div className="space-y-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="space-y-3 p-4 bg-[#0d120f] rounded-xl border border-white/5">
                       <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-2">Informations additionnelles</h4>
                       <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
                         {analysis.plantingDate && (
@@ -3125,13 +3119,13 @@ export default function App() {
                       value={userNotes}
                       onChange={(e) => setUserNotes(e.target.value)}
                       placeholder="Ajouter des observations sur le sol, le cléimat, le rendement..."
-                      className="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 min-h-[100px]"
+                      className="w-full p-3 bg-[#0d120f] rounded-xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 min-h-[100px]"
                     />
                   </div>
 
                   <button 
                     onClick={handleSaveNotes}
-                    className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-bold hover:opacity-90 shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-colors flex items-center justify-center gap-2"
                   >
                     <Save size={18} />
                     Enregistrer l'observation
@@ -3141,14 +3135,14 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <button 
                         onClick={() => analysis?.status === 'error' ? handleRetryAnalysis(editingId) : handleResetAnalysis(editingId)}
-                        className={`py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 border ${analysis?.status === 'error' ? 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+                        className={`py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 border ${analysis?.status === 'error' ? 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700' : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-100'}`}
                       >
                         {analysis?.status === 'error' ? <RefreshCw size={18} /> : <RefreshCw size={18} />}
                         {analysis?.status === 'error' ? 'Ressayer l\'analyse' : 'Réinitialiser'}
                       </button>
                       <button 
                         onClick={() => handleDelete(editingId)}
-                        className={`py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${isDeleting === editingId ? 'bg-red-600 text-white border-red-700' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
+                        className={`py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${isDeleting === editingId ? 'bg-red-600 text-white border-red-700' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-100'}`}
                       >
                         <Trash2 size={18} />
                         {isDeleting === editingId ? 'Confirmer ?' : 'Supprimer'}
@@ -3163,10 +3157,10 @@ export default function App() {
               <div className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
                   Analyses Récentes
-                  <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">{observations.length}</span>
+                  <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded-full">{observations.length}</span>
                 </h3>
                 {observations.slice(0, 5).map((obs) => (
-                  <div key={obs.id} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-100 shadow-sm group relative">
+                  <div key={obs.id} className="flex items-center gap-4 p-3 bg-[#161c18] rounded-xl border border-white/5 shadow-none group relative">
                     <div className="relative cursor-pointer" onClick={() => setSelectedObservation(obs)}>
                       <img src={obs.imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover" />
                       {['pending', 'uploading', 'analyzing'].includes(obs.status) && (
@@ -3175,29 +3169,29 @@ export default function App() {
                         </div>
                       )}
                       {obs.status === 'error' && (
-                        <div className="absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full border-2 border-white">
+                        <div className="absolute -top-1 -right-1 bg-red-500/100 text-white p-0.5 rounded-full border-2 border-white">
                           <X size={10} />
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setSelectedObservation(obs)}>
-                      <h4 className="font-bold text-slate-800 truncate">{obs.variety}</h4>
-                      <p className={`text-xs truncate ${obs.status === 'error' ? 'text-red-500 font-medium' : 'text-slate-500'}`}>
+                      <h4 className="font-bold text-slate-200 truncate">{obs.variety}</h4>
+                      <p className={`text-xs truncate ${obs.status === 'error' ? 'text-red-400 font-medium' : 'text-slate-500'}`}>
                         {obs.status === 'error' ? 'échec de l\'analyse' : obs.species}
                       </p>
-                      {obs.domain && <p className="text-[10px] text-emerald-600 truncate mt-0.5 flex items-center gap-1"><MapIcon size={10} />{obs.domain}</p>}
+                      {obs.domain && <p className="text-[10px] text-emerald-400 truncate mt-0.5 flex items-center gap-1"><MapIcon size={10} />{obs.domain}</p>}
                     </div>
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => startEdit(obs)}
-                        className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                        className="p-2 text-slate-300 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all"
                       >
                         <Edit2 size={18} />
                       </button>
                       {(isAdmin || obs.userId === user?.uid) && (
                         <button 
                           onClick={() => handleDelete(obs.id)}
-                          className={`p-2 rounded-lg transition-all flex items-center gap-1 ${isDeleting === obs.id ? 'bg-red-600 text-white' : 'text-slate-300 hover:text-red-600 hover:bg-red-50'}`}
+                          className={`p-2 rounded-lg transition-all flex items-center gap-1 ${isDeleting === obs.id ? 'bg-red-600 text-white' : 'text-slate-300 hover:text-red-400 hover:bg-red-500/10'}`}
                         >
                           {isDeleting === obs.id ? (
                             <>
@@ -3252,12 +3246,12 @@ export default function App() {
                 }}
               />
             ) : isWeatherLoading ? (
-              <div className="p-8 bg-white rounded-3xl border border-slate-100 flex items-center justify-center gap-3">
-                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="p-8 bg-[#161c18] rounded-3xl border border-white/5 flex items-center justify-center gap-3">
+                <div className="w-4 h-4 border-2 border-blue-500/200 border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.loading}</span>
               </div>
             ) : (
-              <div className="p-4 bg-slate-50 rounded-3xl border border-slate-100 text-center">
+              <div className="p-4 bg-[#0d120f] rounded-3xl border border-white/5 text-center">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Météo indisponible</p>
                 <button 
                   onClick={() => {
@@ -3267,7 +3261,7 @@ export default function App() {
                       { timeout: 10000 }
                     );
                   }}
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-bold"
+                  className="mt-4 px-4 py-2 bg-blue-500/100 text-white rounded-lg text-sm font-bold"
                 >
                   Charger la météo
                 </button>
@@ -3307,11 +3301,11 @@ export default function App() {
             className="space-y-6"
           >
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold text-slate-800">{t.catalog}</h2>
+              <h2 className="text-lg font-bold text-slate-200">{t.catalog}</h2>
               <div className="flex gap-2">
                 <button 
                   onClick={handleExportExcel}
-                  className="p-2 bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-1 text-xs font-bold"
+                  className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center gap-1 text-xs font-bold"
                   title={t.export}
                 >
                   <Download size={16} />
@@ -3328,7 +3322,7 @@ export default function App() {
                     <button
                       onClick={() => document.getElementById('bulk-csv-import')?.click()}
                       disabled={isImportingCSV}
-                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-1 text-xs font-bold hover:bg-emerald-100 transition-colors disabled:opacity-50"
+                      className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center gap-1 text-xs font-bold hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
                       title="Importer CSV / Excel historique"
                     >
                       {isImportingCSV ? (
@@ -3346,14 +3340,14 @@ export default function App() {
                         <button 
                           onClick={handleBulkDelete}
                           disabled={selectedIds.length === 0}
-                          className={`p-2 rounded-lg disabled:opacity-50 flex items-center gap-1 text-xs font-bold transition-all ${isDeletingBulk ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600'}`}
+                          className={`p-2 rounded-lg disabled:opacity-50 flex items-center gap-1 text-xs font-bold transition-all ${isDeletingBulk ? 'bg-red-600 text-white' : 'bg-red-500/100/10 text-red-400'}`}
                         >
                           <Trash2 size={16} />
                           {isDeletingBulk ? 'Confirmer ?' : `(${selectedIds.length})`}
                         </button>
                         <button 
                           onClick={() => { setIsSelectionMode(false); setSelectedIds([]); }}
-                          className="p-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold"
+                          className="p-2 bg-white/5 text-slate-400 rounded-lg text-xs font-bold"
                         >
                           {t.cancel}
                         </button>
@@ -3361,7 +3355,7 @@ export default function App() {
                     ) : (
                       <button 
                         onClick={() => setIsSelectionMode(true)}
-                        className="p-2 bg-emerald-50 text-emerald-600 rounded-lg flex items-center gap-1 text-xs font-bold"
+                        className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center gap-1 text-xs font-bold"
                       >
                         <CheckSquare size={16} />
                         {t.select}
@@ -3379,16 +3373,16 @@ export default function App() {
                   placeholder={t.search}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-white rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full pl-10 pr-4 py-3 bg-[#161c18] rounded-2xl border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 />
               </div>
 
-              <div className="p-4 bg-white rounded-2xl border border-slate-100 space-y-4">
-                <div className="flex bg-slate-100 p-1 rounded-xl">
-                  <button onClick={() => setQuickFilter('week')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'week' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>{t.week}</button>
-                  <button onClick={() => setQuickFilter('month')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'month' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>{t.month}</button>
-                  <button onClick={() => setQuickFilter('quarter')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'quarter' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>{t.quarter}</button>
-                  <button onClick={() => setQuickFilter('custom')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'custom' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-400'}`}>{t.custom}</button>
+              <div className="p-4 bg-[#161c18] rounded-2xl border border-white/5 space-y-4">
+                <div className="flex bg-white/5 p-1 rounded-xl">
+                  <button onClick={() => setQuickFilter('week')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'week' ? 'bg-[#161c18] text-emerald-400 shadow-none' : 'text-slate-400'}`}>{t.week}</button>
+                  <button onClick={() => setQuickFilter('month')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'month' ? 'bg-[#161c18] text-emerald-400 shadow-none' : 'text-slate-400'}`}>{t.month}</button>
+                  <button onClick={() => setQuickFilter('quarter')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'quarter' ? 'bg-[#161c18] text-emerald-400 shadow-none' : 'text-slate-400'}`}>{t.quarter}</button>
+                  <button onClick={() => setQuickFilter('custom')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-all ${quickFilter === 'custom' ? 'bg-[#161c18] text-emerald-400 shadow-none' : 'text-slate-400'}`}>{t.custom}</button>
                 </div>
 
                 {quickFilter === 'custom' && (
@@ -3399,7 +3393,7 @@ export default function App() {
                         type="date" 
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full p-2 bg-slate-50 rounded-xl border border-slate-200 text-xs focus:outline-none"
+                        className="w-full p-2 bg-[#0d120f] rounded-xl border border-white/10 text-xs focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1">
@@ -3408,7 +3402,7 @@ export default function App() {
                         type="date" 
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full p-2 bg-slate-50 rounded-xl border border-slate-200 text-xs focus:outline-none"
+                        className="w-full p-2 bg-[#0d120f] rounded-xl border border-white/10 text-xs focus:outline-none"
                       />
                     </div>
                   </div>
@@ -3418,7 +3412,7 @@ export default function App() {
                   <select 
                     value={regionFilter} 
                     onChange={(e) => setRegionFilter(e.target.value)}
-                    className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-600 focus:outline-none"
+                    className="p-2 bg-[#0d120f] rounded-xl border border-white/10 text-[10px] font-bold text-slate-400 focus:outline-none"
                   >
                     <option value="">{t.region}</option>
                     {MOROCCAN_REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
@@ -3426,7 +3420,7 @@ export default function App() {
                   <select 
                     value={familyFilter} 
                     onChange={(e) => setFamilyFilter(e.target.value)}
-                    className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-600 focus:outline-none"
+                    className="p-2 bg-[#0d120f] rounded-xl border border-white/10 text-[10px] font-bold text-slate-400 focus:outline-none"
                   >
                     <option value="">{t.family}</option>
                     {Array.from(new Set(observations.map(o => o.family).filter(Boolean))).map(f => <option key={f} value={f}>{f}</option>)}
@@ -3434,7 +3428,7 @@ export default function App() {
                   <select 
                     value={domainFilter} 
                     onChange={(e) => setDomainFilter(e.target.value)}
-                    className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-bold text-slate-600 focus:outline-none"
+                    className="p-2 bg-[#0d120f] rounded-xl border border-white/10 text-[10px] font-bold text-slate-400 focus:outline-none"
                   >
                     <option value="">{t.domain}</option>
                     {Array.from(new Set(observations.map(o => o.domain).filter(Boolean))).map(d => <option key={d} value={d}>{d}</option>)}
@@ -3444,7 +3438,7 @@ export default function App() {
                 {(startDate || endDate || searchQuery || regionFilter || familyFilter || domainFilter) && (
                   <button 
                     onClick={() => { setStartDate(''); setEndDate(''); setSearchQuery(''); setRegionFilter(''); setFamilyFilter(''); setDomainFilter(''); setQuickFilter('week'); }}
-                    className="text-[10px] text-emerald-600 font-bold uppercase hover:underline w-full text-center"
+                    className="text-[10px] text-emerald-400 font-bold uppercase hover:underline w-full text-center"
                   >
                     {t.reset}
                   </button>
@@ -3455,17 +3449,17 @@ export default function App() {
             <div className="grid grid-cols-2 gap-4">
               {isObservationsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm animate-pulse">
-                    <div className="w-full aspect-square bg-slate-100"></div>
+                  <div key={i} className="bg-[#161c18] rounded-2xl border border-white/5 overflow-hidden shadow-none animate-pulse">
+                    <div className="w-full aspect-square bg-white/5"></div>
                     <div className="p-3 space-y-2">
-                      <div className="h-3 bg-slate-100 rounded w-3/4"></div>
-                      <div className="h-2 bg-slate-100 rounded w-1/2"></div>
+                      <div className="h-3 bg-white/5 rounded w-3/4"></div>
+                      <div className="h-2 bg-white/5 rounded w-1/2"></div>
                     </div>
                   </div>
                 ))
               ) : filteredObservations.length === 0 ? (
                 <div className="col-span-2 py-20 text-center">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-[#0d120f] rounded-full flex items-center justify-center mx-auto mb-4">
                     <Search className="text-slate-300" size={32} />
                   </div>
                   <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">{t.noResults}</p>
@@ -3473,7 +3467,7 @@ export default function App() {
               ) : filteredObservations.map((obs) => (
                 <div 
                   key={obs.id} 
-                  className={`bg-white rounded-2xl border overflow-hidden shadow-sm transition-all relative ${isSelectionMode && selectedIds.includes(obs.id) ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-100'}`}
+                  className={`bg-[#161c18] rounded-2xl border overflow-hidden shadow-none transition-all relative ${isSelectionMode && selectedIds.includes(obs.id) ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-white/5'}`}
                   onClick={() => isSelectionMode ? toggleSelection(obs.id) : undefined}
                 >
                   {isSelectionMode && (
@@ -3483,7 +3477,7 @@ export default function App() {
                           <CheckSquare size={16} />
                         </div>
                       ) : (
-                        <div className="bg-white/80 backdrop-blur-sm text-slate-400 rounded-md p-0.5 border border-slate-200 shadow-sm">
+                        <div className="bg-[#161c18]/80 backdrop-blur-md text-slate-400 rounded-md p-0.5 border border-white/10 shadow-none">
                           <Square size={16} />
                         </div>
                       )}
@@ -3506,7 +3500,7 @@ export default function App() {
                     
                     {/* Soft Delete Badge for Admins */}
                     {isAdmin && obs.isDeletedByCreator && (
-                      <div className="absolute top-2 left-2 bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-widest z-20 flex items-center gap-1">
+                      <div className="absolute top-2 left-2 bg-red-500/100 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg uppercase tracking-widest z-20 flex items-center gap-1">
                         <Trash2 size={10} />
                         Supprimé par l'utilisateur
                       </div>
@@ -3535,11 +3529,11 @@ export default function App() {
                       <div className="absolute top-2 right-2 flex gap-1">
                         <button 
                           onClick={(e) => { e.stopPropagation(); if(confirm("Supprimer cette observation locale ?")) deleteOfflineObservation(obs.id).then(() => setOfflineObservations(prev => prev.filter(o => o.id !== obs.id))); }}
-                          className="bg-red-500/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:bg-red-600 transition-colors"
+                          className="bg-red-500/100/90 backdrop-blur-sm p-1.5 rounded-full shadow-none hover:bg-red-600 transition-colors"
                         >
                           <Trash2 size={12} className="text-white" />
                         </button>
-                        <div className="bg-amber-500/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm" title={obs.status === 'error' ? `Erreur: ${obs.error}` : "En attente de connexion"}>
+                        <div className="bg-amber-500/90 backdrop-blur-sm p-1.5 rounded-full shadow-none" title={obs.status === 'error' ? `Erreur: ${obs.error}` : "En attente de connexion"}>
                           {obs.status === 'syncing' ? (
                             <RefreshCw size={12} className="text-white animate-spin" />
                           ) : obs.status === 'error' ? (
@@ -3550,21 +3544,21 @@ export default function App() {
                         </div>
                       </div>
                     ) : ['pending', 'uploading', 'analyzing'].includes(obs.status) && (
-                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
+                      <div className="absolute top-2 right-2 bg-[#161c18]/80 backdrop-blur-md p-1.5 rounded-full shadow-none">
                         <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
                       </div>
                     )}
                     {obs.status === 'error' && (
-                      <div className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-sm">
+                      <div className="absolute top-2 right-2 bg-red-500/100 text-white p-1 rounded-full shadow-none">
                         <X size={14} />
                       </div>
                     )}
 
                     <div className="p-3">
-                      <h4 className="font-bold text-sm text-slate-800 truncate">{obs.variety}</h4>
+                      <h4 className="font-bold text-sm text-slate-200 truncate">{obs.variety}</h4>
                       <p className="text-[10px] text-slate-500 uppercase font-bold">{obs.family}</p>
                       <div className="flex justify-between items-center mt-1">
-                        {obs.domain && <p className="text-[10px] text-emerald-600 truncate flex items-center gap-1"><MapIcon size={10} />{obs.domain}</p>}
+                        {obs.domain && <p className="text-[10px] text-emerald-400 truncate flex items-center gap-1"><MapIcon size={10} />{obs.domain}</p>}
                         <p className="text-[8px] text-slate-400 font-medium">
                           {obs.capturedAt ? new Date(obs.capturedAt).toLocaleDateString() : obs.createdAt?.toDate().toLocaleDateString()}
                         </p>
@@ -3621,7 +3615,7 @@ export default function App() {
           >
             <button 
               onClick={() => setSelectedImage(null)}
-              className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+              className="absolute top-6 right-6 p-3 bg-[#161c18]/10 hover:bg-[#161c18]/20 rounded-full text-white transition-colors"
             >
               <X size={24} />
             </button>
@@ -3633,7 +3627,7 @@ export default function App() {
             />
             <button 
               onClick={() => handleDownloadImage(selectedImage, `agroscan_full_${Date.now()}.jpg`)}
-              className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-full font-bold shadow-lg hover:bg-emerald-700 transition-all active:scale-95"
+              className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-bold shadow-[0_0_15px_rgba(52,211,153,0.2)] hover:opacity-90 transition-all active:scale-95"
             >
               <Download size={20} />
               Télécharger l'image
@@ -3657,26 +3651,26 @@ export default function App() {
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[80vh]"
+              className="bg-[#161c18] w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[80vh]"
             >
-              <div className="p-4 bg-emerald-600 text-white flex justify-between items-center">
+              <div className="p-4 bg-[#161c18] border-b border-white/5 text-emerald-400 flex justify-between items-center">
                 <h3 className="font-bold flex items-center gap-2"><MapPin size={18} /> {t.manualLocation}</h3>
-                <button onClick={() => setIsMapPickerOpen(false)} className="p-1 hover:bg-white/20 rounded-full transition-colors"><X size={20} /></button>
+                <button onClick={() => setIsMapPickerOpen(false)} className="p-1 hover:bg-[#161c18]/20 rounded-full transition-colors"><X size={20} /></button>
               </div>
               <div className="flex-1 relative">
                 <MapView 
                   markers={manualLocation ? [{ id: 'manual', lat: manualLocation.lat, lng: manualLocation.lng, name: 'Sélection', variety: 'Manuel' }] : []}
                   onMapClick={(lat, lng) => setManualLocation({ lat, lng })}
                 />
-                <div className="absolute top-4 left-4 right-4 bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-lg text-[10px] font-medium text-slate-600 border border-slate-200">
+                <div className="absolute top-4 left-4 right-4 bg-[#161c18]/80 backdrop-blur-md p-3 rounded-xl shadow-lg text-[10px] font-medium text-slate-400 border border-white/10">
                   Cliquez sur la carte pour dfinir la position exacte de l'observation.
                 </div>
               </div>
-              <div className="p-4 border-t border-slate-100 bg-slate-50">
+              <div className="p-4 border-t border-white/5 bg-[#0d120f]">
                 <button 
                   onClick={() => setIsMapPickerOpen(false)}
                   disabled={!manualLocation}
-                  className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors disabled:opacity-50"
+                  className="w-full py-3 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-bold hover:opacity-90 shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-colors disabled:opacity-50"
                 >
                   Confirmer la position
                 </button>
@@ -3686,13 +3680,15 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      <ChatBot />
+
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-lg border-t border-slate-100 p-4 flex justify-around items-center z-50">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#161c18]/80 backdrop-blur-lg border-t border-white/5 p-4 flex justify-around items-center z-50">
         <button 
           onClick={() => setActiveTab('map')}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'map' ? 'text-emerald-600' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'map' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
-          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'map' ? 'bg-emerald-50' : ''}`}>
+          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'map' ? 'bg-emerald-500/10' : ''}`}>
             <MapIcon size={24} />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-tighter">{t.map}</span>
@@ -3701,7 +3697,7 @@ export default function App() {
           onClick={() => setActiveTab('weather')}
           className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'weather' ? 'text-blue-500' : 'text-slate-400'}`}
         >
-          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'weather' ? 'bg-blue-50' : ''}`}>
+          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'weather' ? 'bg-blue-500/10' : ''}`}>
             <Cloud size={24} />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-tighter">{t.weather}</span>
@@ -3709,18 +3705,18 @@ export default function App() {
 
         <button 
           onClick={() => { setActiveTab('scan'); setAnalysis(null); }}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'scan' ? 'text-emerald-600' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'scan' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
-          <div className={`p-3 -mt-4 bg-emerald-600 text-white rounded-full shadow-lg shadow-emerald-600/30 transition-transform ${activeTab === 'scan' ? 'scale-110' : ''}`}>
+          <div className={`p-3 -mt-4 bg-emerald-500/20 text-emerald-400 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-transform ${activeTab === 'scan' ? 'scale-110' : ''}`}>
             <Plus size={28} />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-tighter mt-1">{t.scan}</span>
         </button>
         <button 
           onClick={() => setActiveTab('catalog')}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'catalog' ? 'text-emerald-600' : 'text-slate-400'}`}
+          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'catalog' ? 'text-emerald-400' : 'text-slate-400'}`}
         >
-          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'catalog' ? 'bg-emerald-50' : ''}`}>
+          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'catalog' ? 'bg-emerald-500/10' : ''}`}>
             <Book size={24} />
           </div>
           <span className="text-[10px] font-bold uppercase tracking-tighter">{t.catalog}</span>
@@ -3728,9 +3724,9 @@ export default function App() {
         {isAdmin && (
           <button 
             onClick={() => setActiveTab('admin')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'admin' ? 'text-emerald-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'admin' ? 'text-emerald-400' : 'text-slate-400'}`}
           >
-            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'admin' ? 'bg-emerald-50' : ''}`}>
+            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'admin' ? 'bg-emerald-500/10' : ''}`}>
               <RefreshCw size={24} />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-tighter">{t.admin}</span>

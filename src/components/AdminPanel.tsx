@@ -33,14 +33,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Header */}
-      <div className="bg-white border-b px-6 py-8">
+      <div className="bg-[#161c18] border-b px-6 py-8">
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-black text-gray-900 tracking-tight">{t.admin}</h1>
             <p className="text-sm text-gray-500 font-medium tracking-wide uppercase">{t.users}</p>
           </div>
-          <div className="p-3 bg-blue-50 rounded-2xl">
-            <ShieldCheck className="w-8 h-8 text-blue-600" />
+          <div className="p-3 bg-blue-500/10 rounded-2xl">
+            <ShieldCheck className="w-8 h-8 text-blue-400" />
           </div>
         </div>
 
@@ -50,7 +50,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             onClick={() => setActiveTab('pending')}
             className={`flex-grow py-2.5 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
               activeTab === 'pending' 
-                ? 'bg-white text-blue-600 shadow-sm' 
+                ? 'bg-[#161c18] text-blue-400 shadow-none' 
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
@@ -60,7 +60,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             onClick={() => setActiveTab('all')}
             className={`flex-grow py-2.5 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
               activeTab === 'all' 
-                ? 'bg-white text-blue-600 shadow-sm' 
+                ? 'bg-[#161c18] text-blue-400 shadow-none' 
                 : 'text-gray-400 hover:text-gray-600'
             }`}
           >
@@ -78,7 +78,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
             placeholder={t.search}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
+            className="w-full pl-12 pr-4 py-3 bg-[#161c18] border rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-none"
           />
         </div>
       </div>
@@ -94,7 +94,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white p-5 rounded-2xl border shadow-sm space-y-4"
+                className="bg-[#161c18] p-5 rounded-2xl border shadow-none space-y-4"
               >
                 <div className="flex justify-between items-start">
                   <div className="flex gap-4">
@@ -110,7 +110,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                   </div>
                   <div className={`px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
                     user.status === 'approved' ? 'bg-green-50 text-green-600' :
-                    user.status === 'rejected' ? 'bg-red-50 text-red-600' :
+                    user.status === 'rejected' ? 'bg-red-500/100/10 text-red-400' :
                     'bg-orange-50 text-orange-600'
                   }`}>
                     {user.status === 'approved' ? t.accessApproved : 
@@ -145,7 +145,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="flex gap-2">
                       <button
                         onClick={() => onReject(user.uid)}
-                        className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                        className="p-2 bg-red-500/100/10 text-red-400 rounded-xl hover:bg-red-100 transition-colors"
                       >
                         <XCircle className="w-6 h-6" />
                       </button>

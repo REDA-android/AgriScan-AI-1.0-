@@ -72,6 +72,38 @@ export interface PlantAnalysis {
   userNotes?: string;
 }
 
+export async function chatWithGemini(message: string, history: { role: 'user'|'model'; text: string }[]): Promise<string> {
+  const hasNoKey = (!import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY === "MY_GEMINI_API_KEY" || import.meta.env.VITE_GEMINI_API_KEY === "MISSING_API_KEY") && !(localStorage.getItem('user_gemini_api_key') || "").trim();
+
+  if (hasNoKey) {
+    throw new Error("Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage).");
+  }
+
+  const ai = getAI();
+  const formattedHistory = history.map(msg => ({
+    role: msg.role === 'model' ? 'model' : 'user',
+    parts: [{ text: msg.text }]
+  }));
+
+  try {
+    const chat = ai.chats.create({
+      model: "gemini-3-flash-preview",
+      config: {
+        systemInstruction: "Tu es Chronos Gemma, le système de surveillance neuronale des plantes (AgroScan IA), spécialisé en agronomie et botanique. Tes réponses doivent être professionnelles, techniquement précises, et axées sur l'agriculture."
+      }
+    });
+
+    const response = await chat.sendMessage({
+      message: message
+    });
+
+    return response.text || "Erreur lors de la génération de la réponse.";
+  } catch (error: any) {
+    console.error("Error in chatWithGemini:", error);
+    throw error;
+  }
+}
+
 export async function analyzePlantImage(images: { base64Image: string, mimeType: string }[]): Promise<PlantAnalysis> {
   // Check if a valid API key exists (either system or user-provided)
   let systemKey = "";
@@ -87,7 +119,7 @@ export async function analyzePlantImage(images: { base64Image: string, mimeType:
   const hasNoKey = (!systemKey || systemKey === "MY_GEMINI_API_KEY" || systemKey === "MISSING_API_KEY") && !userKey.trim();
 
   if (hasNoKey) {
-    throw new Error("Clé API Gemini manquante. Veuillez configurer VITE_GEMINI_API_KEY dans votre environnement.");
+    throw new Error("Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage).");
   }
 
   // Limit to first 6 images to reduce payload size and improve reliability

@@ -13,7 +13,7 @@ const ObservationCard: React.FC<ObservationCardProps> = ({ observation, onClick,
   const getStatusIcon = () => {
     switch (observation.status) {
       case 'completed': return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'error': return <AlertCircle className="w-4 h-4 text-red-400" />;
       case 'analyzing': return <Clock className="w-4 h-4 text-blue-500 animate-pulse" />;
       default: return <Clock className="w-4 h-4 text-gray-400" />;
     }
@@ -22,8 +22,8 @@ const ObservationCard: React.FC<ObservationCardProps> = ({ observation, onClick,
   const getStatusColor = () => {
     switch (observation.status) {
       case 'completed': return 'bg-green-50 border-green-100';
-      case 'error': return 'bg-red-50 border-red-100';
-      case 'analyzing': return 'bg-blue-50 border-blue-100';
+      case 'error': return 'bg-red-500/10 border-red-500/20';
+      case 'analyzing': return 'bg-blue-500/10 border-blue-100';
       default: return 'bg-gray-50 border-gray-100';
     }
   };
@@ -46,7 +46,7 @@ const ObservationCard: React.FC<ObservationCardProps> = ({ observation, onClick,
             className="h-full w-full object-cover"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute bottom-0 right-0 p-1 bg-white/80 rounded-tl-lg">
+          <div className="absolute bottom-0 right-0 p-1 bg-[#161c18]/80 rounded-tl-lg">
             {getStatusIcon()}
           </div>
         </div>
@@ -57,7 +57,7 @@ const ObservationCard: React.FC<ObservationCardProps> = ({ observation, onClick,
               <h3 className="font-bold text-gray-900 truncate text-lg leading-tight">
                 {observation.variety || observation.culture || t.pending}
               </h3>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-white px-1.5 py-0.5 rounded border">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 bg-[#161c18] px-1.5 py-0.5 rounded border">
                 {observation.bbchDominant || 'BBCH --'}
               </span>
             </div>
@@ -79,7 +79,7 @@ const ObservationCard: React.FC<ObservationCardProps> = ({ observation, onClick,
       </div>
       
       {observation.status === 'analyzing' && (
-        <div className="absolute bottom-0 left-0 h-1 bg-blue-500 animate-[shimmer_2s_infinite]" style={{ width: '100%' }} />
+        <div className="absolute bottom-0 left-0 h-1 bg-blue-500/100 animate-[shimmer_2s_infinite]" style={{ width: '100%' }} />
       )}
     </motion.div>
   );

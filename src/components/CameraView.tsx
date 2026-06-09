@@ -318,21 +318,21 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
   return (
     <div className="space-y-6">
       {/* Image Gallery / Upload Area */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      <div className="bg-[#161c18] rounded-2xl p-4 shadow-none border border-white/5">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-slate-800">Photos ({files.length})</h3>
+          <h3 className="font-bold text-slate-200">Photos ({files.length})</h3>
           {files.length > 0 && (
             <div className="flex gap-2">
               <button 
                 onClick={() => cameraInputRef.current?.click()}
-                className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-1 text-xs font-bold"
+                className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-colors flex items-center gap-1 text-xs font-bold"
               >
                 <Camera size={16} />
                 Prendre
               </button>
               <button 
                 onClick={() => galleryInputRef.current?.click()}
-                className="p-2 bg-slate-50 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors flex items-center gap-1 text-xs font-bold"
+                className="p-2 bg-[#0d120f] text-slate-400 rounded-lg hover:bg-white/5 transition-colors flex items-center gap-1 text-xs font-bold"
               >
                 <Upload size={16} />
                 Importer
@@ -370,12 +370,12 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                   setTempSaturation(100);
                   setTempSharpness(0);
                 }}
-                className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group cursor-pointer hover:ring-2 hover:ring-emerald-500 transition-all"
+                className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group cursor-pointer hover:ring-2 hover:ring-emerald-500 transition-all"
                 title="Cliquer pour ajuster l'image"
               >
                 <img src={f.preview} alt={`Preview ${i}`} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="text-[10px] font-black uppercase text-white bg-slate-900/80 px-2 py-1 rounded-md tracking-wider flex items-center gap-1">
+                <div className="absolute inset-0 bg-[#0d120f]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-[10px] font-black uppercase text-white bg-[#0d120f]/80 px-2 py-1 rounded-md tracking-wider flex items-center gap-1">
                     <Sliders size={10} /> Ajuster
                   </span>
                 </div>
@@ -392,7 +392,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
             ))}
             <button 
               onClick={() => cameraInputRef.current?.click()}
-              className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:text-emerald-500 hover:border-emerald-200 hover:bg-emerald-50 transition-colors"
+              className="aspect-square rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-slate-400 hover:text-emerald-500 hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-colors"
             >
               <Plus size={24} />
               <span className="text-[10px] font-bold mt-1">Ajouter</span>
@@ -402,19 +402,19 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
           <div className="flex flex-col gap-3">
             <button 
               onClick={() => cameraInputRef.current?.click()}
-              className="w-full aspect-[21/9] bg-emerald-50 rounded-xl border-2 border-dashed border-emerald-200 flex flex-col items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-colors"
+              className="w-full aspect-[21/9] bg-emerald-500/10 rounded-xl border-2 border-dashed border-emerald-500/30 flex flex-col items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-colors"
             >
               <Camera size={32} className="mb-2" />
               <span className="text-sm font-bold">Prendre une photo</span>
-              <span className="text-xs text-emerald-600/70 mt-1">Utiliser l'appareil photo</span>
+              <span className="text-xs text-emerald-400/70 mt-1">Utiliser l'appareil photo</span>
             </button>
             <button 
               onClick={() => galleryInputRef.current?.click()}
-              className="w-full aspect-[21/9] bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors"
+              className="w-full aspect-[21/9] bg-[#0d120f] rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-slate-400 hover:bg-white/5 transition-colors"
             >
               <Upload size={32} className="mb-2" />
               <span className="text-sm font-bold">Importer des photos</span>
-              <span className="text-xs text-slate-500 mt-1">Depuis la galerie</span>
+              <span className="text-xs text-slate-400 mt-1">Depuis la galerie</span>
             </button>
           </div>
         )}
@@ -433,17 +433,17 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
               initial={{ scale: 0.95, y: 15 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 15 }}
-              className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+              className="bg-[#161c18] rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
               {/* Header */}
-              <div className="px-5 py-3 border-b flex justify-between items-center bg-slate-50">
+              <div className="px-5 py-3 border-b flex justify-between items-center bg-[#0d120f]">
                 <div className="flex items-center gap-2">
-                  <Sliders className="w-5 h-5 text-emerald-600" />
-                  <span className="font-black text-xs text-slate-700 uppercase tracking-wider">Ajustements botaniques</span>
+                  <Sliders className="w-5 h-5 text-emerald-400" />
+                  <span className="font-black text-xs text-slate-300 uppercase tracking-wider">Ajustements botaniques</span>
                 </div>
                 <button
                   onClick={() => setSelectedImageIndex(null)}
-                  className="p-1 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600"
+                  className="p-1 hover:bg-white/10 rounded-full text-slate-400 hover:text-slate-400"
                 >
                   <X size={18} />
                 </button>
@@ -451,7 +451,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
 
               {/* Body */}
               <div className="p-5 flex-1 overflow-y-auto space-y-5">
-                <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-900 border flex items-center justify-center">
+                <div className="relative aspect-square rounded-xl overflow-hidden bg-[#0d120f] border flex items-center justify-center">
                   <img
                     src={files[selectedImageIndex]?.preview}
                     alt="Tuning preview"
@@ -470,9 +470,9 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                 <div className="space-y-4">
                   {/* Contrast */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       <span>Contraste</span>
-                      <span className="text-emerald-600">{tempContrast}%</span>
+                      <span className="text-emerald-400">{tempContrast}%</span>
                     </div>
                     <input
                       type="range"
@@ -486,9 +486,9 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
 
                   {/* Saturation */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       <span>Saturation</span>
-                      <span className="text-emerald-600">{tempSaturation}%</span>
+                      <span className="text-emerald-400">{tempSaturation}%</span>
                     </div>
                     <input
                       type="range"
@@ -502,9 +502,9 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
 
                   {/* Sharpness */}
                   <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                       <span>Netteté (Clarté)</span>
-                      <span className="text-emerald-600">{tempSharpness}%</span>
+                      <span className="text-emerald-400">{tempSharpness}%</span>
                     </div>
                     <input
                       type="range"
@@ -522,10 +522,10 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
               </div>
 
               {/* Action buttons */}
-              <div className="p-4 border-t bg-slate-50 flex gap-2">
+              <div className="p-4 border-t bg-[#0d120f] flex gap-2">
                 <button
                   onClick={() => setSelectedImageIndex(null)}
-                  className="flex-1 py-2 text-xs font-bold bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg"
+                  className="flex-1 py-2 text-xs font-bold bg-white/10 hover:bg-slate-300 text-slate-300 rounded-lg"
                 >
                   Fermer
                 </button>
@@ -580,55 +580,55 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
 
 
       {/* Metadata Form */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 space-y-4">
-        <h3 className="font-bold text-slate-800 text-sm">Informations de l'observation</h3>
+      <div className="bg-[#161c18] rounded-2xl p-4 shadow-none border border-white/5 space-y-4">
+        <h3 className="font-bold text-slate-200 text-sm">Informations de l'observation</h3>
         
         <div className="space-y-3">
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Culture (Espèce principale)</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Culture (Espèce principale)</label>
             <input 
               type="text" 
               value={culture}
               onChange={e => setCulture(e.target.value)}
               placeholder="Ex: Tomate, Poivron, Fraise..."
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nom de la variété <span className="text-red-500">*</span></label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Nom de la variété <span className="text-red-400">*</span></label>
             <input 
               type="text" 
               value={variety}
               onChange={e => setVariety(e.target.value)}
               placeholder="Ex: Tomate Marmande..."
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               required
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Domaine / Site de production</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Domaine / Site de production</label>
             <input 
               type="text" 
               value={domain}
               onChange={e => setDomain(e.target.value)}
               placeholder="Ex: Parcelle Nord, Serre A..."
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Notes générales</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Notes générales</label>
             <textarea 
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Observations supplémentaires..."
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 min-h-[60px]"
+              className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 min-h-[60px]"
             />
           </div>
 
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center justify-between w-full py-2 text-xs font-bold text-emerald-600 uppercase tracking-wider border-t border-slate-100 mt-2 pt-4"
+            className="flex items-center justify-between w-full py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider border-t border-white/5 mt-2 pt-4"
           >
             Informations additionnelles (Facultatif)
             {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -644,74 +644,74 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
               >
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date de plantation</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Date de plantation</label>
                     <input 
                       type="date" 
                       value={plantingDate}
                       onChange={e => setPlantingDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date de Taille</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Date de Taille</label>
                     <input 
                       type="date" 
                       value={pruningDate}
                       onChange={e => setPruningDate(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Obtenteur de la variété</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Obtenteur de la variété</label>
                   <input 
                     type="text" 
                     value={breeder}
                     onChange={e => setBreeder(e.target.value)}
                     placeholder="Ex: Vilmorin, Gautier..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Qté récoltée (Kg/pot)</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Qté récoltée (Kg/pot)</label>
                     <input 
                       type="number" 
                       step="0.1"
                       value={harvestQuantity}
                       onChange={e => setHarvestQuantity(e.target.value)}
                       placeholder="Ex: 2.5"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Densité</label>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Densité</label>
                     <input 
                       type="text" 
                       value={density}
                       onChange={e => setDensity(e.target.value)}
                       placeholder="Ex: 3.5 pl/m²"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                      className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Fermeté des fruits</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Fermeté des fruits</label>
                   <input 
                     type="text" 
                     value={fruitFirmness}
                     onChange={e => setFruitFirmness(e.target.value)}
                     placeholder="Ex: Très ferme, molle..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Défauts qualitatifs observés</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Défauts qualitatifs observés</label>
                   <textarea 
                     value={defects}
                     onChange={e => setDefects(e.target.value)}
                     placeholder="Ex: Micro-fissures, coloration hétérogène..."
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 min-h-[60px]"
+                    className="w-full px-3 py-2 bg-[#0d120f] border border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 min-h-[60px]"
                   />
                 </div>
               </motion.div>
@@ -740,13 +740,13 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
       <div className="flex flex-col gap-2">
         <div className="flex gap-2 justify-center">
           {!isOnline && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-full">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-400 text-[10px] font-bold rounded-full">
               <WifiOff size={12} />
               HORS-LIGNE
             </div>
           )}
           {(currentLocation || manualLocation) && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full">
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full">
               <MapPin size={12} />
               {manualLocation ? 'GPS MANUEL' : (locationSource === 'exif' ? 'GPS EXIF' : 'GPS ACTIF')}
             </div>
@@ -754,7 +754,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
         </div>
         <button 
           onClick={onOpenMapPicker}
-          className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest hover:underline flex items-center justify-center gap-1"
+          className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest hover:underline flex items-center justify-center gap-1"
         >
           <MapPin size={12} />
           {manualLocation ? 'Changer la position manuelle' : 'Définir la position manuellement'}
@@ -767,11 +767,11 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-between"
+            className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
               <CheckCircle className="text-emerald-500" size={20} />
-              <span className="text-xs font-medium text-emerald-800">
+              <span className="text-xs font-medium text-emerald-400">
                 {offlineQueue} photo(s) en attente de synchro
               </span>
             </div>
