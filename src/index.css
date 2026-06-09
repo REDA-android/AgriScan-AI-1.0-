@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Scope Leaflet's z-index layers so they do not overlap high-level UI controls of the application */
+.leaflet-container {
+  z-index: 1 !important;
+}

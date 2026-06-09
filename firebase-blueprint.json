@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "User": {
+      "title": "Utilisateur",
+      "description": "Profil utilisateur de l'application AgroScan.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "ID unique Firebase Auth" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["owner", "user", "viewer", "admin"] },
+        "accessStatus": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "accessStatus"]
+    },
+    "Observation": {
+      "title": "Observation Botanique",
+      "description": "Une analyse de plante effectuée sur le terrain.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "L'utilisateur ayant fait l'observation" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "imageUrls": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "family": { "type": "string" },
+        "species": { "type": "string" },
+        "variety": { "type": "string" },
+        "culture": { "type": "string" },
+        "region": { "type": "string" },
+        "domain": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "error"] },
+        "bbchDominant": { "type": "string", "description": "Stade BBCH dominant" },
+        "bbchSecondary": { "type": "array", "items": { "type": "string" }, "description": "Stades BBCH secondaires" },
+        "organCounts": {
+          "type": "object",
+          "properties": {
+            "flowers": { "type": "number" },
+            "fruits": { "type": "number" },
+            "details": { "type": "string" }
+          }
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "phenotypicTraits": {
+          "type": "object",
+          "properties": {
+            "color": { "type": "string" },
+            "shape": { "type": "string" },
+            "size": { "type": "string" },
+            "healthStatus": { "type": "string" },
+            "diseasesOrDeficiencies": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "userNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "capturedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "imageUrl", "family", "species", "variety", "location"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Données de profil utilisateur"
+    },
+    "/observations/{obsId}": {
+      "schema": "Observation",
+      "description": "Liste des analyses botaniques"
+    }
+  }
+}
