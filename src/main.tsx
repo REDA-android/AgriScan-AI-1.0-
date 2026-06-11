@@ -14,8 +14,11 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Show errors on the screen for Android debugging
+// Show errors on the screen for debugging (ignoring benign Vite/WebSocket errors)
 window.onerror = function(message, source, lineno, colno, error) {
+  const msg = String(message);
+  if (msg.includes('WebSocket') || msg.includes('vite') || msg.includes('HMR')) return;
+
   const errorDiv = document.createElement('div');
   errorDiv.style.position = 'fixed';
   errorDiv.style.top = '0';
@@ -34,8 +37,22 @@ window.onerror = function(message, source, lineno, colno, error) {
   document.body.appendChild(errorDiv);
 };
 
-// Also catch unhandled promise rejections
+// Also catch unhandled promise rejections (ignoring benign Vite/WebSocket errors)
 window.addEventListener('unhandledrejection', function(event) {
+  const reason = event.reason;
+  const reasonStr = String(reason);
+  const reasonStack = (reason && reason.stack) ? String(reason.stack) : '';
+  
+  if (
+    reasonStr.includes('WebSocket') || 
+    reasonStr.includes('vite') || 
+    reasonStr.includes('HMR') ||
+    reasonStack.includes('WebSocket') ||
+    reasonStack.includes('vite')
+  ) {
+    return;
+  }
+
   const errorDiv = document.createElement('div');
   errorDiv.style.position = 'fixed';
   errorDiv.style.top = '50px';

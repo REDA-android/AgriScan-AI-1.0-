@@ -12,7 +12,8 @@ import {
   sendEmailVerification,
   updateProfile,
   signInAnonymously,
-  signInWithCredential
+  signInWithCredential,
+  User
 } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
@@ -66,23 +67,16 @@ export const storage = storageInstance;
 
 export const googleProvider = new GoogleAuthProvider();
 
+import { uploadToCloudinary } from './services/cloudinaryService';
+
 export const uploadImage = async (file: Blob, path: string, onProgress?: (progress: number) => void) => {
-  if (!storage) throw new Error("Storage not initialized or bucket not configured");
-  
-  const storageRef = ref(storage, path);
-  
-  try {
-    // If progress is requested, we can't easily do it with uploadBytes, but we can fake a 50% and 100%
-    if (onProgress) onProgress(50);
-    const result = await uploadBytes(storageRef, file);
-    if (onProgress) onProgress(100);
-    
-    // Get download URL
-    return await getDownloadURL(result.ref);
-  } catch (error) {
-    console.error("Error during image upload to Firebase Storage:", error);
-    throw error;
+  const useCloudinary = !!import.meta.env.VITE_CLOUDINARY_CLOUD_NAME && !!import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+  if (!useCloudinary) {
+    throw new Error("Configuration Cloudinary manquante. Veuillez renseigner VITE_CLOUDINARY_CLOUD_NAME et VITE_CLOUDINARY_UPLOAD_PRESET dans les paramètres.");
   }
+  
+  console.log("Upload via Cloudinary...");
+  return await uploadToCloudinary(file, onProgress);
 };
 
 let isSigningIn = false;
@@ -136,14 +130,22 @@ export const signInWithGoogle = async () => {
 };
 
 // Hook pour récupérer le résultat du redirect au démarrage
+let redirectPromise: Promise<User | null> | null = null;
+
 export const checkRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-    return result?.user || null;
-  } catch (error) {
-    console.error("Erreur Redirect Result:", error);
-    return null;
-  }
+  if (redirectPromise) return redirectPromise;
+  
+  redirectPromise = (async () => {
+    try {
+      const result = await getRedirectResult(auth);
+      return result?.user || null;
+    } catch (error) {
+      console.error("Erreur Redirect Result:", error);
+      return null;
+    }
+  })();
+  
+  return redirectPromise;
 };
 
 export const registerWithEmail = async (email: string, pass: string, displayName: string) => {

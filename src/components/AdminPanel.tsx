@@ -145,7 +145,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                     <div className="flex gap-2">
                       <button
                         onClick={() => onReject(user.uid)}
-                        className="p-2 bg-red-500/100/10 text-red-400 rounded-xl hover:bg-red-100 transition-colors"
+                        className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-colors"
                       >
                         <XCircle className="w-6 h-6" />
                       </button>

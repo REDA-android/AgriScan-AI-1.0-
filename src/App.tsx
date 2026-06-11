@@ -13,7 +13,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db, handleFirestoreError, OperationType, signInWithGoogle, logout, uploadImage, registerWithEmail, loginWithEmail, resetPassword, testConnection, checkRedirectResult, isNetworkOfflineError } from './firebase';
 import { Capacitor } from '@capacitor/core';
 import { addDoc, collection, serverTimestamp, updateDoc, doc, deleteDoc, getDocFromServer, getDocs, setDoc, limit, query, where, orderBy, onSnapshot, getDocsFromServer, getDocsFromCache } from 'firebase/firestore';
-import { analyzePlantImage, PlantAnalysis, clearAIInstance, getAI } from './services/geminiService';
+import { analyzePlantImage, PlantAnalysis, clearAIInstance } from './services/geminiService';
 import { triggerHaptic } from './utils/haptics';
 
 import { 
@@ -81,6 +81,8 @@ const runBackgroundAnalysis = async (docId: string, images: any[], metadata: any
       errorMessage = "Trop de requêtes : Veuillez patienter une minute.";
     } else if (error.message?.includes("spending cap")) {
       errorMessage = "Limite de budget atteinte sur votre projet Google Cloud.";
+    } else if (error.message?.includes("Clé API Gemini manquante")) {
+      errorMessage = error.message;
     } else {
       errorMessage = "Erreur technique : " + (error.message || "Inconnue");
     }
@@ -111,6 +113,7 @@ interface WeatherInfo {
     precipQty: number;
     precipProb: number;
     airQuality: string;
+    uvIndex?: number;
   };
   forecast: {
     date: string;
@@ -126,6 +129,7 @@ interface WeatherInfo {
     windSpeed: number;
     airQuality: string;
     condition: string;
+    uvIndexMax?: number;
   }[];
 }
 
@@ -180,7 +184,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
         {(isAdmin || observation.userId === auth.currentUser?.uid) && (
           <button 
             onClick={() => onDelete(observation.id)}
-            className={`p-2 rounded-xl transition-all ${isDeleting === observation.id ? 'bg-red-600 text-white' : 'bg-red-500/100/10 text-red-400 hover:bg-red-100'}`}
+            className={`p-2 rounded-xl transition-all ${isDeleting === observation.id ? 'bg-red-600 text-white' : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'}`}
           >
             {isDeleting === observation.id ? <CheckSquare size={20} /> : <Trash2 size={20} />}
           </button>
@@ -216,7 +220,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             )}
 
             {observation.status === 'error' && (
-              <div className="absolute inset-0 bg-red-500/100/90 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
+              <div className="absolute inset-0 bg-red-500/90 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
                 <AlertCircle size={48} className="mb-4" />
                 <h4 className="text-lg font-bold mb-2">L'analyse a échoué</h4>
                 <p className="text-sm opacity-80 max-w-xs mb-6">
@@ -383,12 +387,12 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
             ))}
           </div>
 
-          {observation.phenotypicTraits?.diseasesOrDeficiencies && Array.isArray(observation.phenotypicTraits.diseasesOrDeficiencies) && observation.phenotypicTraits.diseasesOrDeficiencies.length > 0 && (
+                {observation.phenotypicTraits?.diseasesOrDeficiencies && Array.isArray(observation.phenotypicTraits.diseasesOrDeficiencies) && observation.phenotypicTraits.diseasesOrDeficiencies.length > 0 && (
             <div className="space-y-2 mt-2">
               <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Alertes Sanitaires</span>
               <div className="flex flex-wrap gap-2">
                 {observation.phenotypicTraits.diseasesOrDeficiencies.map((d: string, i: number) => (
-                  <span key={i} className="px-2 py-1 bg-red-500/100/10 text-red-400 text-[10px] font-bold rounded-md border border-red-500/20">
+                  <span key={i} className="px-2 py-1 bg-red-500/10 text-red-400 text-[10px] font-bold rounded-md border border-red-500/20">
                     {d}
                   </span>
                 ))}
@@ -619,7 +623,7 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
                   </button>
                   <button 
                     onClick={() => handleUpdateStatus(user.id, 'rejected')}
-                    className="flex-1 py-2 bg-red-500/100/10 text-red-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-100 transition-colors"
+                    className="flex-1 py-2 bg-red-500/10 text-red-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-500/20 transition-colors"
                   >
                     {t.reject}
                   </button>
@@ -726,6 +730,7 @@ function WeatherCard({
     { key: 'precipQty', label: t.precipQty, unit: 'mm', color: '#3b82f6' },
     { key: 'precipProb', label: t.precipProb, unit: '%', color: '#60a5fa' },
     { key: 'windSpeed', label: t.windSpeed, unit: 'km/h', color: '#64748b' },
+    { key: 'uvIndexMax', label: 'Index UV', unit: '', color: '#f97316' },
   ];
 
   const currentIndicator = indicators.find(i => i.key === selectedIndicator) || indicators[0];
@@ -740,10 +745,12 @@ function WeatherCard({
 
   if (!weather || !weather.current || !weather.forecast) return null;
 
-  // Since past_days=31 and forecast_days=16 (47 total), let's split them.
-  // The first 31 elements are history, the remaining 16 are today + forecast.
-  const historyData = weather.forecast.slice(0, 31);
-  const forecastData = weather.forecast.slice(31);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayIndex = weather.forecast.findIndex(d => d.date === todayStr);
+  const splitIndex = todayIndex !== -1 ? todayIndex : 31;
+
+  const historyData = weather.forecast.slice(0, splitIndex);
+  const forecastData = weather.forecast.slice(splitIndex);
 
   const displayData = viewMode === 'forecast' ? forecastData : historyData;
 
@@ -838,9 +845,17 @@ function WeatherCard({
               </div>
             )}
 
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-slate-200 tracking-tighter">{isLoading ? '...' : (weather.current.temp ?? '--')}</span>
-              <span className="text-sm font-bold text-slate-400 uppercase">{weather.current.condition ?? '--'}</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-black text-slate-200 tracking-tighter">{isLoading ? '...' : (weather.current.temp ?? '--')}</span>
+                <span className="text-sm font-bold text-slate-400 uppercase">{weather.current.condition ?? '--'}</span>
+              </div>
+              {weather.current.uvIndex !== undefined && (
+                <div className="px-2 py-1 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                  <p className="text-[7px] font-bold text-orange-500 uppercase tracking-widest leading-none mb-0.5">Index UV</p>
+                  <p className="text-[10px] font-black text-orange-400 leading-none">{weather.current.uvIndex}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -991,6 +1006,7 @@ export default function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isGoogleConnecting, setIsGoogleConnecting] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Chatbot & Preference States
   const [chatMessages, setChatMessages] = useState<any[]>(() => {
@@ -1064,10 +1080,7 @@ export default function App() {
     localStorage.setItem('agro_chat_messages', JSON.stringify(updatedMessages));
 
     try {
-      // Instancier l'API avec sécurité
-      const ai = getAI();
-      
-      // Définir les outils si Grounding est coché
+      // Préparer les outils si Grounding est coché
       const tools: any[] = [];
       if (useGoogleSearch) {
         tools.push({ googleSearch: {} });
@@ -1077,7 +1090,6 @@ export default function App() {
       const systemInstruction = "Vous êtes un ingénieur agronome expert et compagnon virtuel d'AgroScan IA. Vous donnez des réponses extrêmement professionnelles, précises et scientifiques en langue française ou arabe selon le message de l'utilisateur. Détaillez l'identification des maladies, les cultures maraîchères locales, l'irrigation et les stades phénologiques BBCH. Répondez de manière structurée avec des puces élégantes.";
 
       // Construire l'historique de discussion à passer à l'API
-      // On convertit pour le format contents attendu par l'API
       const contents = updatedMessages.map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'model',
         parts: [{ text: msg.text }]
@@ -1089,23 +1101,41 @@ export default function App() {
         tools: tools.length > 0 ? tools : undefined,
       };
 
-      // Si High Thinking est coché, activer thinkingConfig
       if (useHighThinking) {
         config.thinkingConfig = {
           thinkingLevel: 'HIGH'
         };
       }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-flash',
-        contents,
-        config
+      const userKey = localStorage.getItem('user_gemini_api_key') || "";
+      const proxyRes = await fetch('/api/gemini/generateContent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+           model: 'gemini-3.5-flash',
+           contents, 
+           config,
+           userKey
+        })
+      }).catch(err => {
+        console.error("Fetch error chat:", err);
+        throw new Error(`Erreur de connexion au serveur chat: ${err.message || "Serveur injoignable"}`);
       });
 
-      const responseText = response.text || "Désolé, je n'ai pas pu générer de réponse.";
+      const responseData = await proxyRes.json().catch(() => null);
+
+      if (!proxyRes.ok) {
+        throw new Error(responseData?.error || `Erreur chat AI (${proxyRes.status})`);
+      }
+
+      if (!responseData) {
+        throw new Error("Réponse vide reçue de l'assistant.");
+      }
+
+      const responseText = responseData.text || "Désolé, je n'ai pas pu générer de réponse.";
       
       // Récupérer les sources de grounding si applicables
-      const groundingChunks = (response as any).candidates?.[0]?.groundingMetadata?.groundingChunks;
+      const groundingChunks = responseData.candidates?.[0]?.groundingMetadata?.groundingChunks;
       const groundingSources = groundingChunks ? groundingChunks.map((chunk: any) => ({
         title: chunk.web?.title || "Source Google Search",
         uri: chunk.web?.uri
@@ -1219,8 +1249,8 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Check for redirect result (important for native mobile auth)
-    checkRedirectResult();
+    // Check for redirect result (handled inside the persistent state or when app opens)
+    // Removed direct redundant call to avoid Auth INTERNAL ASSERTION FAILED
 
     // Handle Deep Linking callback on native environments to close Custom Tab and finalize log in
     let appUrlListener: any = null;
@@ -1335,6 +1365,7 @@ export default function App() {
   });
 
   const fetchWeather = async (lat?: number, lng?: number, query?: string) => {
+    if (isWeatherLoading) return;
     setIsWeatherLoading(true);
     try {
       let locationLat = lat;
@@ -1343,8 +1374,19 @@ export default function App() {
       let locRegion = '';
 
       if (query) {
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=fr&format=json`);
-        const geoData = await geoRes.json();
+        const geoRes = await fetch(`/api/weather/geocode?name=${encodeURIComponent(query)}`).catch(e => {
+          console.error("Fetch error geocode:", e);
+          throw new Error(`Impossible de contacter le service de géocodage: ${e.message}`);
+        });
+        
+        if (!geoRes.ok) {
+          const errData = await geoRes.json().catch(() => ({}));
+          throw new Error(errData.error || `Erreur géocodage (${geoRes.status})`);
+        }
+        const geoData = await geoRes.json().catch(() => {
+          throw new Error("Réponse de géocodage invalide");
+        });
+        
         if (geoData.results && geoData.results.length > 0) {
           locationLat = geoData.results[0].latitude;
           locationLng = geoData.results[0].longitude;
@@ -1354,15 +1396,32 @@ export default function App() {
           throw new Error("Lieu non trouvé");
         }
       } else if (lat && lng) {
-        locName = `Site local`;
+        locationLat = lat;
+        locationLng = lng;
+        locName = `Ma Position`;
       }
 
-      if (!locationLat || !locationLng) {
-        throw new Error("Coordonnées invalides");
+      if (locationLat === undefined || locationLng === undefined) {
+        setIsWeatherLoading(false);
+        return;
       }
 
-      const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${locationLat}&longitude=${locationLng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,et0_fao_evapotranspiration,shortwave_radiation_sum&past_days=31&forecast_days=16&timezone=auto`);
-      const weatherData = await weatherRes.json();
+      const weatherRes = await fetch(`/api/weather/forecast?lat=${locationLat}&lng=${locationLng}`).catch(e => {
+        console.error("Fetch error weather:", e);
+        throw new Error(`Impossible de contacter le service météo: ${e.message}`);
+      });
+      
+      if (!weatherRes.ok) {
+        const errData = await weatherRes.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur météo (${weatherRes.status})`);
+      }
+      const weatherData = await weatherRes.json().catch(() => {
+        throw new Error("Réponse météo invalide");
+      });
+      
+      if (!weatherData || !weatherData.daily) {
+        throw new Error("Données météo incomplètes reçues de l'API");
+      }
 
       const getWeatherCondition = (code: number) => {
         if (code === 0) return 'SOLEIL';
@@ -1380,18 +1439,17 @@ export default function App() {
         const parApprox = daily.shortwave_radiation_sum[index] ? daily.shortwave_radiation_sum[index] * 1000000 / (24 * 3600) * 0.45 : 0;
         
         // Approx DPV max daily
-        const tMax = daily.temperature_2m_max[index] || 20;
+        const tMax = daily.temperature_2m_max[index] ?? 20;
         const es = 0.6108 * Math.exp(17.27 * tMax / (tMax + 237.3));
-        // We lack daily humidity, we'll assume a constant or estimate. Just a rough estimate for DPV since it's asked.
-        const ea = es * 0.6; // assuming 60% rh at max temp for a rough generic value if unknown daily.
+        const ea = es * 0.6; // assuming 60% rh
         const dpvApprox = es - ea;
 
         return {
           date: timeStr,
-          tempMax: daily.temperature_2m_max[index] || 0,
-          tempMin: daily.temperature_2m_min[index] || 0,
-          tempAvg: daily.temperature_2m_mean[index] || 0,
-          humidity: 60, // approximated
+          tempMax: daily.temperature_2m_max[index],
+          tempMin: daily.temperature_2m_min[index],
+          tempAvg: daily.temperature_2m_mean[index],
+          humidity: 60,
           et0: daily.et0_fao_evapotranspiration[index] || 0,
           dpv: Number(dpvApprox.toFixed(2)),
           par: Number(parApprox.toFixed(0)),
@@ -1399,10 +1457,17 @@ export default function App() {
           precipProb: daily.precipitation_probability_max?.[index] || 0,
           windSpeed: daily.wind_speed_10m_max[index] || 0,
           airQuality: "Bonne",
-          condition: getWeatherCondition(daily.weather_code[index] || 0)
+          condition: getWeatherCondition(daily.weather_code[index] || 0),
+          uvIndexMax: daily.uv_index_max?.[index] || 0
         };
-      });
+      }).filter((day: any) => day.tempMax !== null && day.tempMax !== undefined);
 
+      const todayStr = new Date().toISOString().split('T')[0];
+      const todayIndex = daily.time.indexOf(todayStr);
+      // Open-Meteo with past_days=31 puts today at index 31 if data is available for all days.
+      // If today is not in daily.time (unlikely but possible), fallback to index 31 or last.
+      const safeIndex = todayIndex !== -1 ? todayIndex : (daily.time.length >= 32 ? 31 : daily.time.length - 1);
+      
       const currentCode = weatherData.current?.weather_code || 0;
       
       const currentTemp = weatherData.current?.temperature_2m || 0;
@@ -1415,17 +1480,18 @@ export default function App() {
         region: locRegion,
         current: {
           temp: currentTemp,
-          tempMax: daily.temperature_2m_max[31] || 0, // index 31 is roughly today
-          tempMin: daily.temperature_2m_min[31] || 0,
+          tempMax: daily.temperature_2m_max[safeIndex] || 0,
+          tempMin: daily.temperature_2m_min[safeIndex] || 0,
           humidity: weatherData.current?.relative_humidity_2m || 0,
           windSpeed: weatherData.current?.wind_speed_10m || 0,
           condition: getWeatherCondition(currentCode),
-          et0: daily.et0_fao_evapotranspiration[31] || 0,
+          et0: daily.et0_fao_evapotranspiration[safeIndex] || 0,
           dpv: Number(currentDpv.toFixed(2)),
-          par: Number(((daily.shortwave_radiation_sum[31] || 0) * 1000000 / (24 * 3600) * 0.45).toFixed(0)),
+          par: Number(((daily.shortwave_radiation_sum[safeIndex] || 0) * 1000000 / (24 * 3600) * 0.45).toFixed(0)),
           precipQty: weatherData.current?.precipitation || 0,
-          precipProb: daily.precipitation_probability_max?.[31] || 0,
-          airQuality: "Bonne"
+          precipProb: daily.precipitation_probability_max?.[safeIndex] || 0,
+          airQuality: "Bonne",
+          uvIndex: weatherData.current?.uv_index || 0
         },
         forecast: forecastArray
       };
@@ -1746,6 +1812,7 @@ export default function App() {
         const fetchAndAnalyze = async () => {
           try {
             const res = await fetch(obs.imageUrl);
+            if (!res.ok) throw new Error("Impossible de récupérer l'image pour analyse");
             const blob = await res.blob();
             const reader = new FileReader();
             const base64 = await new Promise<string>((resolve) => {
@@ -1768,6 +1835,7 @@ export default function App() {
   const handleDownloadImage = async (url: string, filename: string) => {
     try {
       const response = await fetch(url, { referrerPolicy: 'no-referrer' });
+      if (!response.ok) throw new Error("Impossible de télécharger l'image");
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -2257,6 +2325,7 @@ export default function App() {
       for (const url of obs.imageUrls || [obs.imageUrl]) {
         try {
           const response = await fetch(url);
+          if (!response.ok) throw new Error(`Erreur lors de la récupération de l'image: ${response.statusText}`);
           const blob = await response.blob();
           const reader = new FileReader();
           const base64 = await new Promise<string>((resolve) => {
@@ -2302,6 +2371,7 @@ export default function App() {
         const processedImages = [];
         for (const url of obs.imageUrls || [obs.imageUrl]) {
           const response = await fetch(url);
+          if (!response.ok) throw new Error(`Erreur image: ${response.statusText}`);
           const blob = await response.blob();
           
           // Compress for AI (768px) to ensure reliability
@@ -2799,19 +2869,69 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex bg-[#0d120f] p-1 rounded-xl border border-white/5">
-            <button onClick={() => setLanguage('en')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'en' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500'}`}>EN</button>
-            <button onClick={() => setLanguage('fr')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'fr' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500'}`}>FR</button>
-            <button onClick={() => setLanguage('ar')} className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${language === 'ar' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500'}`}>AR</button>
-          </div>
           <button 
-            onClick={handleLogout}
-            className="w-10 h-10 rounded-full bg-[#0d120f] border border-white/5 flex items-center justify-center text-slate-400 hover:bg-red-500/100/10 hover:text-red-400 transition-colors"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-10 h-10 rounded-full bg-[#0d120f] border border-white/5 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity"
+            title="Profil & Déconnexion"
           >
-            <LogOut size={18} />
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <UserIcon size={18} className="text-slate-400" />
+            )}
           </button>
         </div>
       </header>
+
+      {/* Logout Confirmation Modal */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 border-x border-white/5 max-w-md mx-auto"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#161c18] border border-red-500/20 rounded-3xl p-6 w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-32 bg-red-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+              
+              <div className="flex flex-col items-center text-center space-y-4 relative z-10">
+                <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-400 mb-2 border border-red-500/20">
+                  <LogOut size={32} />
+                </div>
+                
+                <h3 className="text-xl font-black text-white">Déconnexion</h3>
+                <p className="text-sm text-slate-400">
+                  Êtes-vous sûr de vouloir vous déconnecter ? Vous devrez vous reconnecter pour synchroniser vos données.
+                </p>
+                
+                <div className="flex w-full gap-3 mt-6">
+                  <button 
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-white/5 text-white hover:bg-white/10 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowLogoutConfirm(false);
+                      handleLogout();
+                    }}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+                  >
+                    Se déconnecter
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {quotaExceeded && (
         <div className="p-4 bg-red-500/10 border-b border-red-500/20 flex items-start gap-3">
@@ -2919,7 +3039,7 @@ export default function App() {
             {canManage && (
               <button 
                 onClick={handleGlobalReset}
-                className="w-full p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                className="w-full p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors"
               >
                 <RefreshCw size={14} /> {t.allUsersReset}
               </button>
@@ -3142,7 +3262,7 @@ export default function App() {
                       </button>
                       <button 
                         onClick={() => handleDelete(editingId)}
-                        className={`py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${isDeleting === editingId ? 'bg-red-600 text-white border-red-700' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-100'}`}
+                        className={`py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${isDeleting === editingId ? 'bg-red-600 text-white border-red-700' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'}`}
                       >
                         <Trash2 size={18} />
                         {isDeleting === editingId ? 'Confirmer ?' : 'Supprimer'}
@@ -3340,7 +3460,7 @@ export default function App() {
                         <button 
                           onClick={handleBulkDelete}
                           disabled={selectedIds.length === 0}
-                          className={`p-2 rounded-lg disabled:opacity-50 flex items-center gap-1 text-xs font-bold transition-all ${isDeletingBulk ? 'bg-red-600 text-white' : 'bg-red-500/100/10 text-red-400'}`}
+                          className={`p-2 rounded-lg disabled:opacity-50 flex items-center gap-1 text-xs font-bold transition-all ${isDeletingBulk ? 'bg-red-600 text-white' : 'bg-red-500/10 text-red-400'}`}
                         >
                           <Trash2 size={16} />
                           {isDeletingBulk ? 'Confirmer ?' : `(${selectedIds.length})`}
@@ -3682,54 +3802,59 @@ export default function App() {
 
       <ChatBot />
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#161c18]/80 backdrop-blur-lg border-t border-white/5 p-4 flex justify-around items-center z-50">
+      {/* Bottom Navigation - Liquid Glass Style */}
+      <nav className="fixed bottom-6 left-4 right-4 max-w-md mx-auto bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-[2.5rem] flex justify-around items-center z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)]">
         <button 
           onClick={() => setActiveTab('map')}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'map' ? 'text-emerald-400' : 'text-slate-400'}`}
+          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'map' ? 'text-emerald-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'map' ? 'bg-emerald-500/10' : ''}`}>
-            <MapIcon size={24} />
+          <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'map' ? 'bg-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:bg-white/5'}`}>
+            <MapIcon size={22} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.map}</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('weather')}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'weather' ? 'text-blue-500' : 'text-slate-400'}`}
-        >
-          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'weather' ? 'bg-blue-500/10' : ''}`}>
-            <Cloud size={24} />
-          </div>
-          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.weather}</span>
+          <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'map' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.map}</span>
         </button>
 
         <button 
-          onClick={() => { setActiveTab('scan'); setAnalysis(null); }}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'scan' ? 'text-emerald-400' : 'text-slate-400'}`}
+          onClick={() => setActiveTab('weather')}
+          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'weather' ? 'text-blue-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <div className={`p-3 -mt-4 bg-emerald-500/20 text-emerald-400 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-transform ${activeTab === 'scan' ? 'scale-110' : ''}`}>
-            <Plus size={28} />
+          <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'weather' ? 'bg-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.3)]' : 'group-hover:bg-white/5'}`}>
+            <Cloud size={22} strokeWidth={activeTab === 'weather' ? 2.5 : 2} />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-tighter mt-1">{t.scan}</span>
+          <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'weather' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.weather}</span>
         </button>
+
+        <button 
+          onClick={() => { setActiveTab('scan'); setAnalysis(null); triggerHaptic('light'); }}
+          className="relative -top-6"
+        >
+          <div className={`p-4 bg-gradient-to-br from-emerald-400 to-emerald-600 text-[#0d120f] rounded-full shadow-[0_10px_25px_rgba(52,211,153,0.4),inset_0_2px_2px_rgba(255,255,255,0.4)] transition-all duration-500 active:scale-90 ${activeTab === 'scan' ? 'scale-110 ring-4 ring-emerald-500/20' : 'hover:scale-105'}`}>
+            <Plus size={32} strokeWidth={3} />
+          </div>
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
+            <span className={`text-[8px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'scan' ? 'text-emerald-400 opacity-100' : 'text-slate-400 opacity-0'}`}>{t.scan}</span>
+          </div>
+        </button>
+
         <button 
           onClick={() => setActiveTab('catalog')}
-          className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'catalog' ? 'text-emerald-400' : 'text-slate-400'}`}
+          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'catalog' ? 'text-emerald-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <div className={`p-2 rounded-xl transition-colors ${activeTab === 'catalog' ? 'bg-emerald-500/10' : ''}`}>
-            <Book size={24} />
+          <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'catalog' ? 'bg-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:bg-white/5'}`}>
+            <Book size={22} strokeWidth={activeTab === 'catalog' ? 2.5 : 2} />
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-tighter">{t.catalog}</span>
+          <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'catalog' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.catalog}</span>
         </button>
+
         {isAdmin && (
           <button 
             onClick={() => setActiveTab('admin')}
-            className={`flex flex-col items-center gap-1 transition-colors ${activeTab === 'admin' ? 'text-emerald-400' : 'text-slate-400'}`}
+            className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'admin' ? 'text-emerald-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'admin' ? 'bg-emerald-500/10' : ''}`}>
-              <RefreshCw size={24} />
+            <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'admin' ? 'bg-emerald-500/20 shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:bg-white/5'}`}>
+              <RefreshCw size={22} strokeWidth={activeTab === 'admin' ? 2.5 : 2} />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-tighter">{t.admin}</span>
+            <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'admin' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.admin}</span>
           </button>
         )}
       </nav>
