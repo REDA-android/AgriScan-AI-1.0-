@@ -35,7 +35,7 @@ async function startServer() {
       console.log(`[AI] Generating content with model: ${req.body.model || 'default'}`);
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: req.body.model || "gemini-3.5-flash",
+        model: req.body.model || "gemini-2.5-flash",
         contents: req.body.contents,
         config: req.body.config
       });
@@ -82,7 +82,7 @@ async function startServer() {
       });
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: {
           parts: parts,
         },
@@ -154,6 +154,36 @@ async function startServer() {
         return res.status(429).json({ error: "Limite de requêtes atteinte : Trop de demandes en peu de temps. Veuillez patienter une minute avant de réessayer.", original: error.message });
       }
 
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/gemini/chat", async (req, res) => {
+    const { message, history, userKey } = req.body;
+    
+    const apiKey = userKey || process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "MISSING_API_KEY") {
+      return res.status(403).json({ error: "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage)." });
+    }
+
+    try {
+      console.log(`[AI] Chat request`);
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const contents = history.map((msg: any) => ({
+        role: msg.role === 'model' ? 'model' : 'user',
+        parts: [{ text: msg.text }]
+      }));
+      contents.push({ role: 'user', parts: [{ text: message }] });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: contents
+      });
+
+      res.json({ text: response.text });
+    } catch (error: any) {
+      console.error("[AI] Error in chat:", error);
       res.status(500).json({ error: error.message });
     }
   });

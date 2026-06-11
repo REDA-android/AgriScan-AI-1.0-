@@ -173,13 +173,13 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
           <div className="flex bg-[#161c18]/90 backdrop-blur p-1 rounded-full shadow-md border border-white/5">
             <button 
               onClick={() => setMapType('standard')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'standard' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'standard' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Standard
             </button>
             <button 
               onClick={() => setMapType('satellite')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'satellite' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${mapType === 'satellite' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Satellite
             </button>
@@ -190,19 +190,19 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
           <div className="flex bg-[#161c18]/90 backdrop-blur p-1 rounded-full shadow-md border border-white/5">
             <button 
               onClick={() => setOverlayType('none')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'none' ? 'bg-emerald-500/20 text-emerald-400 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'none' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Standard
             </button>
             <button 
               onClick={() => setOverlayType('health')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'health' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'health' ? 'bg-emerald-600 text-emerald-50' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Santé
             </button>
             <button 
               onClick={() => setOverlayType('density')}
-              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'density' ? 'bg-violet-600 text-white' : 'text-slate-400 hover:bg-white/5'}`}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all ${overlayType === 'density' ? 'bg-violet-600 text-violet-50' : 'text-slate-400 hover:bg-white/5'}`}
             >
               Densité
             </button>
@@ -212,7 +212,7 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
 
           <button 
             onClick={() => setSelectedFamily(null)}
-            className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${!selectedFamily ? 'bg-emerald-600 text-white' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
+            className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${!selectedFamily ? 'bg-emerald-600 text-emerald-50' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
           >
             Tous
           </button>
@@ -220,7 +220,7 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
             <button 
               key={family}
               onClick={() => setSelectedFamily(family)}
-              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${selectedFamily === family ? 'bg-emerald-600 text-white' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${selectedFamily === family ? 'bg-emerald-600 text-emerald-50' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
             >
               {family}
             </button>

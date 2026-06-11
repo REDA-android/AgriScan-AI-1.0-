@@ -399,22 +399,26 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
             <button 
               onClick={() => cameraInputRef.current?.click()}
-              className="w-full aspect-[21/9] bg-emerald-500/10 rounded-xl border-2 border-dashed border-emerald-500/30 flex flex-col items-center justify-center text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+              className="flex-1 py-2 px-3 btn-glass-primary rounded-xl flex items-center justify-center gap-2"
             >
-              <Camera size={32} className="mb-2" />
-              <span className="text-sm font-bold">Prendre une photo</span>
-              <span className="text-xs text-emerald-400/70 mt-1">Utiliser l'appareil photo</span>
+              <Camera size={16} className="text-emerald-300" />
+              <div className="flex flex-col items-start leading-none opacity-90">
+                <span className="text-[11px] font-bold tracking-wide uppercase">Prendre</span>
+                <span className="text-[9px] font-medium mt-0.5">Appareil</span>
+              </div>
             </button>
             <button 
               onClick={() => galleryInputRef.current?.click()}
-              className="w-full aspect-[21/9] bg-[#0d120f] rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-slate-400 hover:bg-white/5 transition-colors"
+              className="flex-1 py-2 px-3 btn-glass rounded-xl flex items-center justify-center gap-2"
             >
-              <Upload size={32} className="mb-2" />
-              <span className="text-sm font-bold">Importer des photos</span>
-              <span className="text-xs text-slate-400 mt-1">Depuis la galerie</span>
+              <Upload size={16} className="text-slate-300" />
+              <div className="flex flex-col items-start leading-none opacity-90">
+                <span className="text-[11px] font-bold tracking-wide uppercase text-slate-200">Importer</span>
+                <span className="text-[9px] text-slate-400 font-medium mt-0.5">Galerie</span>
+              </div>
             </button>
           </div>
         )}
@@ -480,7 +484,8 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                       max="180"
                       value={tempContrast}
                       onChange={(e) => setTempContrast(Number(e.target.value))}
-                      className="w-full accent-emerald-600 cursor-pointer"
+                      className="slider-glass"
+                      style={{ '--slider-bg': `linear-gradient(to right, #3b82f6 ${(tempContrast - 50) * (100/130)}%, rgba(255,255,255,0.1) ${(tempContrast - 50) * (100/130)}%)` } as any}
                     />
                   </div>
 
@@ -496,7 +501,8 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                       max="180"
                       value={tempSaturation}
                       onChange={(e) => setTempSaturation(Number(e.target.value))}
-                      className="w-full accent-emerald-600 cursor-pointer"
+                      className="slider-glass"
+                      style={{ '--slider-bg': `linear-gradient(to right, #3b82f6 ${(tempSaturation - 50) * (100/130)}%, rgba(255,255,255,0.1) ${(tempSaturation - 50) * (100/130)}%)` } as any}
                     />
                   </div>
 
@@ -512,7 +518,8 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                       max="100"
                       value={tempSharpness}
                       onChange={(e) => setTempSharpness(Number(e.target.value))}
-                      className="w-full accent-emerald-600 cursor-pointer"
+                      className="slider-glass"
+                      style={{ '--slider-bg': `linear-gradient(to right, #3b82f6 ${tempSharpness}%, rgba(255,255,255,0.1) ${tempSharpness}%)` } as any}
                     />
                     <p className="text-[9px] text-slate-400">
                       Améliore la visibilité des détails morphologiques fins pour l'intelligence artificielle.
