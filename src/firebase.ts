@@ -96,16 +96,15 @@ export const signInWithGoogle = async () => {
 
     if (isNative) {
       console.log("Environnement Natif détecté - Utilisation de Chrome Custom Tabs pour l'authentification");
-      // Utilisation d'onglets personnalisés (Chrome Custom Tabs) intégrés à l'application
-      // pour éviter de forcer l'utilisateur à basculer manuellement vers son navigateur externe standard.
-      const authUrl = `https://${firebaseConfig.authDomain}/__/auth/handler?apiKey=${firebaseConfig.apiKey}&appName=%5BDEFAULT%5D&authType=signInWithRedirect&providerId=google.com&scopes=profile%2Cemail&redirectUrl=${encodeURIComponent("com.agroscan.ia://")}`;
-      
-      await Browser.open({ url: authUrl, windowName: '_blank' });
+      // Pour une application native sans plugin, on utilise le redirect standard
+      await signInWithRedirect(auth, googleProvider);
       return null;
     }
 
     if (window.self !== window.top) {
-      console.warn("L'authentification pourrait être limitée dans cet iframe.");
+      console.warn("L'authentification s'exécute dans un iframe - Utilisation de signInWithRedirect pour éviter les blocages.");
+      await signInWithRedirect(auth, googleProvider);
+      return null;
     }
     
     const result = await signInWithPopup(auth, googleProvider);
