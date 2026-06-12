@@ -95,9 +95,15 @@ export const signInWithGoogle = async () => {
     });
 
     if (isNative) {
-      console.log("Environnement Natif détecté - Utilisation de Chrome Custom Tabs pour l'authentification");
+      console.log("Environnement Natif détecté - Tentative d'authentification");
       // Pour une application native sans plugin, on utilise le redirect standard
-      await signInWithRedirect(auth, googleProvider);
+      // On s'assure que localhost est autorisé dans la console Firebase
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (e: any) {
+        console.error("Erreur immédiate lors du signInWithRedirect native:", e);
+        throw e;
+      }
       return null;
     }
 
@@ -120,7 +126,10 @@ export const signInWithGoogle = async () => {
       return null;
     } else {
       console.error("Détails de l'erreur Firebase Auth:", error);
-      alert("Erreur d'authentification (" + error.code + ") : " + error.message);
+      // On évite l'alert bloquante si possible, ou on donne plus de contexte
+      const msg = `Erreur d'authentification (${error.code}) : ${error.message}. Vérifiez que Google est activé dans Firebase et que localhost est autorisé.`;
+      console.error(msg);
+      if (!isNative) alert(msg);
     }
     throw error;
   } finally {
