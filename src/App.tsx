@@ -1467,9 +1467,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Check for redirect result (handled inside the persistent state or when app opens)
-    // Removed direct redundant call to avoid Auth INTERNAL ASSERTION FAILED
-
+    // Consommer le résultat d'un éventuel redirect au démarrage
+    checkRedirectResult().catch(e => console.warn("Initial redirect check failed:", e));
+    
     // Handle Deep Linking callback on native environments to close Custom Tab and finalize log in
     let appUrlListener: any = null;
     const isNative = Capacitor.isNativePlatform();

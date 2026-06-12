@@ -120,7 +120,6 @@ export const signInWithGoogle = async () => {
     }
 
     // Pour le web (preview et navigateur), on tente d'abord signInWithPopup
-    // C'est plus fiable que le redirect dans un iframe
     try {
       const result = await signInWithPopup(auth, googleProvider);
       return result.user;
@@ -129,12 +128,11 @@ export const signInWithGoogle = async () => {
       
       // Si le popup est bloqué par le navigateur
       if (popupError.code === 'auth/popup-blocked') {
+        // En preview AI Studio, on évite le redirect automatique car il cause souvent des 403
+        // On informe l'utilisateur
         window.dispatchEvent(new CustomEvent('app-notify', { 
-          detail: { message: "La fenêtre de connexion a été bloquée. Tentative de redirection...", type: 'info' } 
+          detail: { message: "La fenêtre de connexion a été bloquée. Veuillez autoriser les popups pour continuer.", type: 'error' } 
         }));
-        // On attend un court instant avant de rediriger pour éviter les conflits d'assertion interne
-        await new Promise(resolve => setTimeout(resolve, 100));
-        await signInWithRedirect(auth, googleProvider);
         return null;
       }
       
@@ -144,9 +142,16 @@ export const signInWithGoogle = async () => {
         return null;
       }
 
-      // Pour les autres erreurs, on tente le redirect si on est dans un iframe ou si on pense que c'est nécessaire
-      if (window.self !== window.top || popupError.code === 'auth/internal-error') {
-        await signInWithRedirect(auth, googleProvider);
+      // On ne tente signInWithRedirect que si on n'est pas dans un iframe, car il échoue souvent en preview
+      if (window.self === window.top) {
+        console.log("Tentative de fallback redirect hors iframe...");
+        try {
+          await signInWithRedirect(auth, googleProvider);
+        } catch (redirectErr) {
+          console.error("Erreur de fallback redirect:", redirectErr);
+        }
+      } else {
+        console.warn("Redirection bloquée par sécurité car l'application est dans un iframe (preview). Utilisez le mode popup.");
       }
       
       return null;
@@ -177,28 +182,33 @@ let redirectResultPromise: Promise<User | null> | null = null;
 let isRedirectChecking = false;
 
 export const checkRedirectResult = async () => {
+  // If we are already connected, no need to check
+  if (auth.currentUser) return auth.currentUser;
+  
   if (isRedirectChecking) return redirectResultPromise;
   if (redirectResultPromise) return redirectResultPromise;
   
   isRedirectChecking = true;
   redirectResultPromise = (async () => {
     try {
-      // Si on est déjà connecté, on n'a pas besoin de vérifier le redirect
+      // Small delay to ensure and stabilize auth state
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Double check if user signed in while waiting
       if (auth.currentUser) return auth.currentUser;
       
-      // Small delay to ensure auth is fully initialized
-      await new Promise(resolve => setTimeout(resolve, 500));
       const result = await getRedirectResult(auth);
       console.log("Redirect Result check finished:", result?.user?.email || "No user");
       return result?.user || null;
     } catch (error: any) {
-      // Don't log normal "no-auth-event" as error
-      if (error.code !== 'auth/no-auth-event') {
-        console.error("Erreur Redirect Result:", error);
+      // Only log significant errors
+      if (error.code !== 'auth/no-auth-event' && error.name !== 'AuthError') {
+        console.warn("Erreur mineure Redirect Result (souvent bénigne):", error.code || error.message);
       }
       return null;
     } finally {
       isRedirectChecking = false;
+      // We don't nullify redirectResultPromise here to keep it cached for components
     }
   })();
   
