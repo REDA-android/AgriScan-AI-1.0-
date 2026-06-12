@@ -19,11 +19,12 @@ import { getFirestore, doc, getDocFromServer, initializeFirestore, persistentLoc
 import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // Initialisation native de GoogleAuth pour Capacitor
 if (Capacitor.isNativePlatform()) {
-  GoogleAuth.initialize();
+  import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
+    GoogleAuth.initialize();
+  }).catch(err => console.warn("GoogleAuth dynamic init failed:", err));
 }
 
 // Import the Firebase configuration
@@ -103,6 +104,7 @@ export const signInWithGoogle = async () => {
     if (isNative) {
       console.log("Environnement Natif détecté - Tentative d'authentification native Google");
       try {
+        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
         const user = await GoogleAuth.signIn();
         if (!user || !user.authentication.idToken) {
           throw new Error("Échec de l'authentification native : Pas d'idToken reçu.");
