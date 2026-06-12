@@ -68,54 +68,82 @@ input[type=range].slider-glass:focus {
 
 /* Light Mode Base */
 body.light-mode {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
+  background-color: #f0fdf4 !important; /* emerald-50 or green-50 */
+  color: #064e3b !important; /* emerald-950 */
 }
 
 body.light-mode .bg-\[\#111412\],
 body.light-mode .bg-\[\#161c18\],
-body.light-mode .bg-\[\#0d120f\] {
+body.light-mode .bg-\[\#0d120f\],
+body.light-mode .bg-\[\#121c15\],
+body.light-mode .btn-glass {
   background-color: #ffffff !important;
-  border-color: #e2e8f0 !important;
+  border-color: #d1fae5 !important; /* emerald-100 */
+}
+
+body.light-mode .bg-\[\#111412\]\/50,
+body.light-mode .bg-\[\#161c18\]\/50,
+body.light-mode .bg-\[\#0d120f\]\/50,
+body.light-mode .bg-\[\#121c15\]\/50 {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+body.light-mode .bg-\[\#111412\]\/20,
+body.light-mode .bg-\[\#161c18\]\/20,
+body.light-mode .bg-\[\#0d120f\]\/20,
+body.light-mode .bg-\[\#121c15\]\/20 {
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+body.light-mode .bg-\[\#111412\]\/10,
+body.light-mode .bg-\[\#161c18\]\/10,
+body.light-mode .bg-\[\#0d120f\]\/10,
+body.light-mode .bg-\[\#121c15\]\/10 {
+  background-color: rgba(16, 185, 129, 0.03) !important;
 }
 
 body.light-mode .border-\[\#111412\] {
-  border-color: #f8fafc !important;
+  border-color: #f0fdf4 !important;
 }
 
 body.light-mode .text-white,
 body.light-mode .text-slate-200,
 body.light-mode .text-slate-300,
 body.light-mode .text-slate-400 {
-  color: #1e293b !important;
+  color: #064e3b !important;
+}
+
+body.light-mode .force-text-white {
+  color: #ffffff !important;
 }
 
 body.light-mode .text-slate-500 {
-  color: #475569 !important;
+  color: #059669 !important; /* emerald-600 */
 }
 
 body.light-mode .border-white\/5,
 body.light-mode .border-white\/10 {
-  border-color: #e2e8f0 !important;
+  border-color: #d1fae5 !important;
 }
 
 body.light-mode .bg-white\/5 {
-  background-color: #f1f5f9 !important;
+  background-color: #ecfdf5 !important; /* emerald-50 */
 }
 
 body.light-mode button:hover.bg-white\/5 {
-  background-color: #e2e8f0 !important;
+  background-color: #d1fae5 !important; /* emerald-100 */
 }
 
 body.light-mode .bg-[#161c18]\/80,
 body.light-mode .bg-\[\#161c18\]\/90 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #d1fae5 !important;
 }
 
 body.light-mode input, body.light-mode textarea {
-  color: #0f172a !important;
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  color: #064e3b !important;
+  background-color: #ffffff !important;
+  border-color: #10b981 !important; /* emerald-500 */
 }
 
 body.light-mode .text-emerald-400,
@@ -124,27 +152,44 @@ body.light-mode .text-emerald-300 {
 }
 
 body.light-mode .btn-glass-primary {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-  border-color: rgba(16, 185, 129, 0.3) !important;
-  color: #047857 !important;
+  background-color: #10b981 !important; /* emerald-500 */
+  border-color: #059669 !important;
+  color: #ffffff !important; /* white text for visibility */
 }
 
 body.light-mode .btn-glass-primary:hover {
-  background-color: rgba(16, 185, 129, 0.2) !important;
+  background-color: #059669 !important; /* emerald-600 */
 }
 
 body.light-mode .btn-glass-primary .text-emerald-300 {
-  color: #047857 !important;
+  color: #ffffff !important;
 }
 
 body.light-mode .bg-emerald-500\/10,
-body.light-mode .bg-emerald-500\/20 {
+body.light-mode .bg-emerald-500\/20,
+body.light-mode .bg-emerald-500\/30 {
   background-color: rgba(16, 185, 129, 0.1) !important;
 }
 
 body.light-mode .border-emerald-500\/20,
 body.light-mode .border-emerald-500\/30 {
   border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+body.light-mode .shadow-emerald-900\/10 {
+  shadow-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+body.light-mode .shadow-emerald-950\/10 {
+  shadow-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+body.light-mode .placeholder-slate-600 {
+  color: #64748b !important; /* slate-500 */
+}
+
+body.light-mode .from-emerald-500.to-\[\#124227\] {
+  background-image: linear-gradient(to right, #10b981, #059669) !important;
 }
 
 body.light-mode .text-blue-400,

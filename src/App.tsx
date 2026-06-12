@@ -144,7 +144,7 @@ interface WeatherInfo {
   }[];
 }
 
-function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelete, isDeleting, onRetry, onDownload }: { 
+function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelete, isDeleting, onRetry, onDownload, language }: { 
   observation: any, 
   onClose: () => void, 
   t: any, 
@@ -153,7 +153,8 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
   onDelete: (id: string) => void,
   isDeleting: string | null,
   onRetry: (id: string) => void,
-  onDownload: (url: string, filename: string) => void
+  onDownload: (url: string, filename: string) => void,
+  language: 'fr' | 'en' | 'ar'
 }) {
   if (!observation) return null;
 
@@ -170,6 +171,89 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const getWhatsAppLabel = () => {
+    if (language === 'en') return 'Share on WhatsApp';
+    if (language === 'ar') return 'مشاركة على واتساب';
+    return 'Partager sur WhatsApp';
+  };
+
+  const handleShareWhatsApp = () => {
+    const variety = observation.variety || (language === 'en' ? 'Unspecified variety' : language === 'ar' ? 'نوع غير محدد' : 'Variété non spécifiée');
+    const culture = observation.culture || (language === 'en' ? 'Unspecified culture' : language === 'ar' ? 'ثقافة غير محددة' : 'Culture non spécifiée');
+    const date = observation.capturedAt 
+      ? new Date(observation.capturedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : language === 'en' ? 'en-US' : 'fr-FR') 
+      : (observation.createdAt?.toDate ? observation.createdAt.toDate().toLocaleDateString(language === 'ar' ? 'ar-EG' : language === 'en' ? 'en-US' : 'fr-FR') : 'N/A');
+    const status = observation.phenotypicTraits?.healthStatus || 'N/A';
+    const diseases = observation.phenotypicTraits?.diseasesOrDeficiencies && Array.isArray(observation.phenotypicTraits.diseasesOrDeficiencies)
+      ? observation.phenotypicTraits.diseasesOrDeficiencies.join(', ')
+      : '';
+    const location = observation.location ? `https://www.google.com/maps/search/?api=1&query=${observation.location.lat},${observation.location.lng}` : '';
+
+    let text = "";
+    if (language === 'en') {
+      text += `🌱 *Plant Health Diagnosis* 🌱\n\n`;
+      text += `*Plant/Variety:* ${variety}\n`;
+      text += `*Culture:* ${culture}\n`;
+      text += `*Date:* ${date}\n`;
+      text += `*Health Status:* ${status}\n`;
+      if (diseases) {
+        text += `*Health Alerts:* ${diseases}\n`;
+      }
+      if (observation.bbchDominant) {
+        text += `*BBCH Stage:* ${observation.bbchDominant}\n`;
+      }
+      if (observation.userNotes) {
+        text += `*User Notes:* ${observation.userNotes}\n`;
+      }
+      if (location) {
+        text += `📍 *Location:* ${location}\n`;
+      }
+      text += `\nShared via AgroScan application.`;
+    } else if (language === 'ar') {
+      text += `🌱 *تشخيص صحة النبات* 🌱\n\n`;
+      text += `*النبات/الصنف:* ${variety}\n`;
+      text += `*الزراعة:* ${culture}\n`;
+      text += `*التاريخ:* ${date}\n`;
+      text += `*الحالة الصحية:* ${status}\n`;
+      if (diseases) {
+        text += `*تنبيهات صحية:* ${diseases}\n`;
+      }
+      if (observation.bbchDominant) {
+        text += `*مرحلة BBCH:* ${observation.bbchDominant}\n`;
+      }
+      if (observation.userNotes) {
+        text += `*ملاحظات المستخدم:* ${observation.userNotes}\n`;
+      }
+      if (location) {
+        text += `📍 *الموقع:* ${location}\n`;
+      }
+      text += `\nتمت المشاركة عبر تطبيق AgroScan.`;
+    } else {
+      text += `🌱 *Diagnostic de Santé du Végétal* 🌱\n\n`;
+      text += `*Plante/Variété :* ${variety}\n`;
+      text += `*Culture :* ${culture}\n`;
+      text += `*Date :* ${date}\n`;
+      text += `*État de santé :* ${status}\n`;
+      if (diseases) {
+        text += `*Alertes sanitaires :* ${diseases}\n`;
+      }
+      if (observation.bbchDominant) {
+        text += `*Stade BBCH :* ${observation.bbchDominant}\n`;
+      }
+      if (observation.userNotes) {
+        text += `*Notes utilisateur :* ${observation.userNotes}\n`;
+      }
+      if (location) {
+        text += `📍 *Localisation :* ${location}\n`;
+      }
+      text += `\nPartagé via l'application AgroScan.`;
+    }
+
+    const encodedText = encodeURIComponent(text);
+    const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -318,6 +402,18 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
               <p className="text-[8px] font-bold text-slate-400 uppercase mb-1">{t.domain}</p>
               <p className="text-xs font-bold text-slate-300">{observation.domain || 'Non spécifié'}</p>
             </div>
+          </div>
+
+          <div className="mt-2">
+            <button
+              onClick={handleShareWhatsApp}
+              className="w-full py-3 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full font-black flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            >
+              <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.4.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.455L0 24zm6.59-4.846c1.6.95 3.1 1.4 4.8.195 5.4-3.1 9.394-4.912 9.398-11.13.002-5.05-4.059-9.157-9.055-9.159-5.003-.002-9.07 4.101-9.073 9.153-.001 2.01.522 3.98 1.51 5.7l-.993 3.633 3.714-.975zm11.367-5.541c-.247-.124-1.461-.72-1.685-.802-.224-.082-.388-.124-.552.124-.164.247-.635.802-.779.965-.143.164-.287.185-.534.062-.247-.124-1.044-.385-1.988-1.227-.735-.656-1.232-1.466-1.376-1.714-.143-.247-.015-.38.11-.502.112-.11.247-.287.371-.432.124-.143.165-.247.247-.412.082-.164.041-.31-.02-.432-.062-.124-.552-1.332-.756-1.823-.203-.488-.406-.412-.552-.42l-.471-.008c-.164 0-.432.062-.656.31-.224.247-.857.837-.857 2.041 0 1.204.877 2.367.999 2.533.123.164 1.725 2.634 4.181 3.693.584.252 1.04.403 1.396.516.587.186 1.12.16 1.543.097.472-.072 1.46-.597 1.666-1.174.206-.576.206-1.07.145-1.173-.06-.104-.224-.164-.471-.287z"/>
+              </svg>
+              {getWhatsAppLabel()}
+            </button>
           </div>
         </section>
 
@@ -956,7 +1052,11 @@ export default function App() {
   const [userData, setUserData] = useState<any>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLightMode, setIsLightMode] = useState(() => {
-    return localStorage.getItem('agro_light_mode') === 'true';
+    const saved = localStorage.getItem('agro_light_mode');
+    if (saved !== null) {
+      return saved === 'true';
+    }
+    return !window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
   const [activeTab, setActiveTab] = useState<'scan' | 'map' | 'weather' | 'catalog' | 'admin'>('scan');
   const [analysis, setAnalysis] = useState<PlantAnalysis | null>(null);
@@ -969,6 +1069,29 @@ export default function App() {
       document.body.classList.remove('light-mode');
     }
   }, [isLightMode]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (e: MediaQueryListEvent) => {
+      if (localStorage.getItem('agro_light_mode') === null) {
+        setIsLightMode(!e.matches);
+      }
+    };
+    
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleSystemThemeChange);
+    } else {
+      mediaQuery.addListener(handleSystemThemeChange);
+    }
+    
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleSystemThemeChange);
+      } else {
+        mediaQuery.removeListener(handleSystemThemeChange);
+      }
+    };
+  }, []);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [backgroundTasks, setBackgroundTasks] = useState<{ id: string, type: 'upload' | 'analysis', progress: number }[]>([]);
   const [observations, setObservations] = useState<any[]>([]);
@@ -2740,9 +2863,9 @@ export default function App() {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="w-20 h-20 bg-[#121c15] rounded-full flex items-center justify-center mx-auto mb-2 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative">
-                <Leaf className="text-emerald-400 relative z-10" size={36} />
-                <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-md"></div>
+              <div className="w-24 h-24 bg-[#121c15] rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.25)] relative overflow-hidden">
+                <Leaf className="text-emerald-400 relative z-10" size={44} />
+                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse"></div>
               </div>
               
               <div className="space-y-1 mb-8">
@@ -2785,7 +2908,9 @@ export default function App() {
               )}
 
               <div className="flex flex-col gap-3">
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.03, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={async () => {
                     setIsAuthLoading(true);
                     setAuthError(null);
@@ -2799,11 +2924,11 @@ export default function App() {
                       setIsAuthLoading(false);
                     }
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-emerald-400 to-[#124227] text-black rounded-full font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-[0_0_15px_rgba(52,211,153,0.2)]"
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-[#124227] text-white force-text-white rounded-full font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-[0_0_15px_rgba(52,211,153,0.2)] cursor-pointer"
                 >
-                  <Globe size={18} className="opacity-80" />
+                  <Globe size={18} className="opacity-90 text-white force-text-white" />
                   {t.connect?.toUpperCase() || "CONNECT WITH GOOGLE"}
-                </button>
+                </motion.button>
               </div>
 
               <div className="relative mt-8 mb-6">
@@ -2854,7 +2979,9 @@ export default function App() {
                   </button>
                 )}
 
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={async () => {
                     setIsAuthLoading(true);
                     setAuthError(null);
@@ -2872,10 +2999,10 @@ export default function App() {
                     }
                   }}
                   disabled={isAuthLoading}
-                  className="w-full py-4 bg-[#161c18]/5 text-white rounded-full font-black border border-white/10 hover:bg-[#161c18]/10 transition-all disabled:opacity-50"
+                  className="w-full py-4 bg-[#161c18]/5 text-white rounded-full font-black border border-white/10 hover:bg-[#161c18]/10 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isAuthLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : (authMode === 'login' ? t.login : t.signup)}
-                </button>
+                </motion.button>
               </div>
 
               <div className="pt-6">
@@ -2894,18 +3021,6 @@ export default function App() {
               </div>
             </div>
           )}
-
-          <div className="mt-8 flex justify-center gap-2">
-            {['fr', 'en', 'ar'].map((lang) => (
-              <button 
-                key={lang}
-                onClick={() => setLanguage(lang as any)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${language === lang ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-400'}`}
-              >
-                {lang}
-              </button>
-            ))}
-          </div>
         </motion.div>
 
         {/* Notifications UI */}
@@ -3735,13 +3850,54 @@ export default function App() {
             <div className="grid grid-cols-2 gap-4">
               {isObservationsLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-[#161c18] rounded-2xl border border-white/5 overflow-hidden shadow-none animate-pulse">
-                    <div className="w-full aspect-square bg-white/5"></div>
-                    <div className="p-3 space-y-2">
-                      <div className="h-3 bg-white/5 rounded w-3/4"></div>
-                      <div className="h-2 bg-white/5 rounded w-1/2"></div>
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0.5 }}
+                    animate={{ opacity: [0.5, 0.8, 0.5] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: i * 0.15
+                    }}
+                    className="bg-[#161c18] rounded-2xl border border-white/5 overflow-hidden shadow-none"
+                  >
+                    <div className="w-full aspect-square bg-white/5 relative overflow-hidden">
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{
+                          duration: 1.6,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      />
                     </div>
-                  </div>
+                    <div className="p-3 space-y-2">
+                      <div className="h-3 bg-white/5 rounded w-3/4 relative overflow-hidden">
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                          animate={{ x: ['-100%', '100%'] }}
+                          transition={{
+                            duration: 1.6,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        />
+                      </div>
+                      <div className="h-2 bg-white/5 rounded w-1/2 relative overflow-hidden">
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                          animate={{ x: ['-100%', '100%'] }}
+                          transition={{
+                            duration: 1.6,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
                 ))
               ) : filteredObservations.length === 0 ? (
                 <div className="col-span-2 py-20 text-center">
@@ -3887,6 +4043,7 @@ export default function App() {
             isDeleting={isDeleting}
             onRetry={handleRetryAnalysis}
             onDownload={handleDownloadImage}
+            language={language}
           />
         )}
       </AnimatePresence>
