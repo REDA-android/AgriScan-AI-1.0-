@@ -125,15 +125,30 @@ export const signInWithGoogle = async () => {
       const result = await signInWithPopup(auth, googleProvider);
       return result.user;
     } catch (popupError: any) {
-      console.log("Erreur signInWithPopup, tentative fallback redirect:", popupError.code);
-      // Fallback sur redirect seulement si le popup est bloqué
+      console.log("Résultat Popup Auth:", popupError.code);
+      
+      // Si le popup est bloqué par le navigateur
       if (popupError.code === 'auth/popup-blocked') {
-        alert("La fenêtre de connexion a été bloquée. Veuillez autoriser les popups ou utiliser le mode plein écran.");
+        window.dispatchEvent(new CustomEvent('app-notify', { 
+          detail: { message: "La fenêtre de connexion a été bloquée. Tentative de redirection...", type: 'info' } 
+        }));
+        // On attend un court instant avant de rediriger pour éviter les conflits d'assertion interne
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await signInWithRedirect(auth, googleProvider);
+        return null;
       }
-      // On tente quand même le redirect si le popup a échoué (sauf si annulé par l'utilisateur)
-      if (popupError.code !== 'auth/popup-closed-by-user') {
+      
+      // Si l'utilisateur a fermé le popup, on ne fait rien de spécial
+      if (popupError.code === 'auth/popup-closed-by-user') {
+        console.log("Popup fermé par l'utilisateur.");
+        return null;
+      }
+
+      // Pour les autres erreurs, on tente le redirect si on est dans un iframe ou si on pense que c'est nécessaire
+      if (window.self !== window.top || popupError.code === 'auth/internal-error') {
         await signInWithRedirect(auth, googleProvider);
       }
+      
       return null;
     }
   } catch (error: any) {
@@ -158,23 +173,50 @@ export const signInWithGoogle = async () => {
   }
 };
 
-// Hook pour récupérer le résultat du redirect au démarrage
-let redirectPromise: Promise<User | null> | null = null;
+let redirectResultPromise: Promise<User | null> | null = null;
+let isRedirectChecking = false;
 
 export const checkRedirectResult = async () => {
-  if (redirectPromise) return redirectPromise;
+  // If we are already checking, return the existing promise
+  if (isRedirectChecking) return redirectResultPromise;
   
-  redirectPromise = (async () => {
+  // If we already have a result promise that completed, we return it
+  if (redirectResultPromise) {
+    const result = await redirectResultPromise;
+    if (result) return result;
+    // If it was null, we might want to check again if it was a false negative, 
+    // but usually once per page load is enough.
+  }
+  
+  isRedirectChecking = true;
+  redirectResultPromise = (async () => {
     try {
+      // Si on est déjà connecté par un autre moyen (session existante), 
+      // on n'a pas besoin de vérifier le redirect result
+      if (auth.currentUser) {
+        console.log("checkRedirectResult: Utilisateur déjà présent, saut de la vérification.");
+        return auth.currentUser;
+      }
+      
+      // Attente d'initialisation de l'auth. 
+      // getRedirectResult peut échouer si appelé trop tôt ou en même temps qu'une autre action.
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       const result = await getRedirectResult(auth);
+      console.log("checkRedirectResult finished:", result?.user?.email || "Pas d'utilisateur détecté via redirect");
       return result?.user || null;
-    } catch (error) {
-      console.error("Erreur Redirect Result:", error);
+    } catch (error: any) {
+      // 'auth/no-auth-event' est normal si on n'a pas fait de redirect
+      if (error.code !== 'auth/no-auth-event') {
+        console.warn("Détail Redirect Result (non-bloquant):", error.code, error.message);
+      }
       return null;
+    } finally {
+      isRedirectChecking = false;
     }
   })();
   
-  return redirectPromise;
+  return redirectResultPromise;
 };
 
 export const registerWithEmail = async (email: string, pass: string, displayName: string) => {
