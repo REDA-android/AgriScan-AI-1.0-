@@ -19,12 +19,11 @@ import { getFirestore, doc, getDocFromServer, initializeFirestore, persistentLoc
 import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // Initialisation native de GoogleAuth pour Capacitor
 if (Capacitor.isNativePlatform()) {
-  import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
-    GoogleAuth.initialize();
-  }).catch(err => console.warn("GoogleAuth dynamic init failed:", err));
+  GoogleAuth.initialize();
 }
 
 // Import the Firebase configuration
@@ -104,7 +103,6 @@ export const signInWithGoogle = async () => {
     if (isNative) {
       console.log("Environnement Natif détecté - Tentative d'authentification native Google");
       try {
-        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
         const user = await GoogleAuth.signIn();
         if (!user || !user.authentication.idToken) {
           throw new Error("Échec de l'authentification native : Pas d'idToken reçu.");
@@ -179,38 +177,24 @@ let redirectResultPromise: Promise<User | null> | null = null;
 let isRedirectChecking = false;
 
 export const checkRedirectResult = async () => {
-  // If we are already checking, return the existing promise
   if (isRedirectChecking) return redirectResultPromise;
-  
-  // If we already have a result promise that completed, we return it
-  if (redirectResultPromise) {
-    const result = await redirectResultPromise;
-    if (result) return result;
-    // If it was null, we might want to check again if it was a false negative, 
-    // but usually once per page load is enough.
-  }
+  if (redirectResultPromise) return redirectResultPromise;
   
   isRedirectChecking = true;
   redirectResultPromise = (async () => {
     try {
-      // Si on est déjà connecté par un autre moyen (session existante), 
-      // on n'a pas besoin de vérifier le redirect result
-      if (auth.currentUser) {
-        console.log("checkRedirectResult: Utilisateur déjà présent, saut de la vérification.");
-        return auth.currentUser;
-      }
+      // Si on est déjà connecté, on n'a pas besoin de vérifier le redirect
+      if (auth.currentUser) return auth.currentUser;
       
-      // Attente d'initialisation de l'auth. 
-      // getRedirectResult peut échouer si appelé trop tôt ou en même temps qu'une autre action.
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      // Small delay to ensure auth is fully initialized
+      await new Promise(resolve => setTimeout(resolve, 500));
       const result = await getRedirectResult(auth);
-      console.log("checkRedirectResult finished:", result?.user?.email || "Pas d'utilisateur détecté via redirect");
+      console.log("Redirect Result check finished:", result?.user?.email || "No user");
       return result?.user || null;
     } catch (error: any) {
-      // 'auth/no-auth-event' est normal si on n'a pas fait de redirect
+      // Don't log normal "no-auth-event" as error
       if (error.code !== 'auth/no-auth-event') {
-        console.warn("Détail Redirect Result (non-bloquant):", error.code, error.message);
+        console.error("Erreur Redirect Result:", error);
       }
       return null;
     } finally {
