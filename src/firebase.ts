@@ -96,15 +96,22 @@ export const signInWithGoogle = async () => {
 
     if (isNative) {
       console.log("Environnement Natif détecté - Tentative d'authentification");
-      // Pour une application native sans plugin, on utilise le redirect standard
-      // On s'assure que localhost est autorisé dans la console Firebase
       try {
-        await signInWithRedirect(auth, googleProvider);
+        // En Capacitor, signInWithPopup peut fonctionner si le bridge est bien configuré
+        const result = await signInWithPopup(auth, googleProvider);
+        return result.user;
       } catch (e: any) {
-        console.error("Erreur immédiate lors du signInWithRedirect native:", e);
-        throw e;
+        console.error("Erreur signInWithPopup native:", e);
+        // Si popup échoue (souvent bloqué), on tente signInWithRedirect
+        // Note: signInWithRedirect nécessite que le domaine de l'app soit autorisé dans Firebase
+        try {
+          await signInWithRedirect(auth, googleProvider);
+        } catch (redirectError: any) {
+          console.error("Erreur secondary signInWithRedirect native:", redirectError);
+          throw redirectError;
+        }
+        return null;
       }
-      return null;
     }
 
     if (window.self !== window.top) {
