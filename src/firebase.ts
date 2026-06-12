@@ -113,9 +113,16 @@ export const signInWithGoogle = async () => {
         console.log("Authentification native réussie");
         return result.user;
       } catch (e: any) {
-        console.error("Erreur GoogleAuth native:", e);
-        // On ne replie pas sur signInWithPopup ici car GoogleAuth est le moyen propre pour Android
-        throw e;
+        let msg = "Erreur GoogleAuth native inconnue";
+        if (e && typeof e === 'object' && e.message) {
+          msg = e.message;
+        } else if (typeof e === 'string') {
+          msg = e;
+        } else {
+          msg = JSON.stringify(e);
+        }
+        console.error("Erreur GoogleAuth native formatée:", msg);
+        throw new Error(msg);
       }
     }
 

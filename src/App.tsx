@@ -1319,35 +1319,56 @@ export default function App() {
         };
       }
 
-      const userKey = localStorage.getItem('user_gemini_api_key') || "";
-      const proxyRes = await fetch('/api/gemini/generateContent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-           model: 'gemini-2.5-flash',
-           contents, 
-           config,
-           userKey
-        })
-      }).catch(err => {
-        console.error("Fetch error chat:", err);
-        throw new Error(`Erreur de connexion au serveur chat: ${err.message || "Serveur injoignable"}`);
-      });
+      const userKey = localStorage.getItem('user_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || "";
+      const apiUrl = import.meta.env.VITE_API_URL || "";
 
-      const responseData = await proxyRes.json().catch(() => null);
+      let responseTextStr = "";
+      let groundingChunksData = null;
 
-      if (!proxyRes.ok) {
-        throw new Error(responseData?.error || `Erreur chat AI (${proxyRes.status})`);
+      if (apiUrl || !userKey) {
+        const proxyRes = await fetch(`${apiUrl}/api/gemini/generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+             model: 'gemini-2.5-flash',
+             contents, 
+             config,
+             userKey
+          })
+        }).catch(err => {
+          console.error("Fetch error chat:", err);
+          throw new Error(`Erreur de connexion au serveur chat: ${err.message || "Serveur injoignable"}`);
+        });
+
+        const responseData = await proxyRes.json().catch(() => null);
+
+        if (!proxyRes.ok) {
+          throw new Error(responseData?.error || `Erreur chat AI (${proxyRes.status})`);
+        }
+
+        if (!responseData) {
+          throw new Error("Réponse vide reçue de l'assistant.");
+        }
+
+        responseTextStr = responseData.text || "Désolé, je n'ai pas pu générer de réponse.";
+        groundingChunksData = responseData.candidates?.[0]?.groundingMetadata?.groundingChunks;
+      } else {
+        // Mode APK Direct Fallback
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: userKey });
+        const res = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents,
+          config
+        });
+        responseTextStr = res.text || "Désolé, je n'ai pas pu générer de réponse.";
+        groundingChunksData = (res as any).candidates?.[0]?.groundingMetadata?.groundingChunks;
       }
 
-      if (!responseData) {
-        throw new Error("Réponse vide reçue de l'assistant.");
-      }
-
-      const responseText = responseData.text || "Désolé, je n'ai pas pu générer de réponse.";
+      const responseText = responseTextStr;
       
       // Récupérer les sources de grounding si applicables
-      const groundingChunks = responseData.candidates?.[0]?.groundingMetadata?.groundingChunks;
+      const groundingChunks = groundingChunksData;
       const groundingSources = groundingChunks ? groundingChunks.map((chunk: any) => ({
         title: chunk.web?.title || "Source Google Search",
         uri: chunk.web?.uri
@@ -2780,11 +2801,11 @@ export default function App() {
     const title2 = titleParts.slice(1).join(' ') || 'IA';
 
     return (
-      <div className="min-h-screen bg-[#111412] flex items-center justify-center p-6 font-sans">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[380px] bg-[#161c18] rounded-[40px] p-10 shadow-2xl border border-white/5 text-center relative overflow-hidden"
+          className="w-full max-w-[400px] bg-white rounded-3xl p-8 shadow-xl border border-slate-100 text-center relative overflow-hidden"
           dir={isArabic ? 'rtl' : 'ltr'}
         >
 
@@ -2804,16 +2825,16 @@ export default function App() {
           )}
           {authMode === 'verifyEmail' ? (
             <div className="space-y-6">
-              <div className="w-20 h-20 bg-blue-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-900/50">
-                <Mail className="text-blue-400" size={40} />
+              <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-100">
+                <Mail className="text-blue-500" size={40} />
               </div>
-              <h2 className="text-2xl font-black text-white tracking-tight">{t.verifyEmail}</h2>
-              <p className="text-slate-400 text-sm font-medium leading-relaxed">
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t.verifyEmail}</h2>
+              <p className="text-slate-600 text-sm font-medium leading-relaxed">
                 {t.verifyEmailDesc}
               </p>
               <button 
                 onClick={handleLogout}
-                className="w-full py-4 bg-[#161c18]/5 text-slate-300 rounded-full font-bold hover:bg-[#161c18]/10 transition-all border border-white/10"
+                className="w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all border border-slate-200"
               >
                 {t.back}
               </button>
@@ -2822,23 +2843,23 @@ export default function App() {
             <div className="space-y-6 relative">
               <button 
                 onClick={() => setAuthMode('login')}
-                className="absolute -top-4 -left-4 p-2 hover:bg-[#161c18]/5 rounded-full transition-colors"
+                className="absolute -top-4 -left-4 p-2 hover:bg-slate-100 rounded-full transition-colors"
               >
                 <ArrowLeft size={20} className="text-slate-500" />
               </button>
-              <div className="w-20 h-20 bg-amber-950/30 rounded-full flex items-center justify-center mx-auto mb-6 border border-amber-900/50">
-                <Lock className="text-amber-400" size={32} />
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100">
+                <Lock className="text-emerald-500" size={32} />
               </div>
-              <h2 className="text-2xl font-black text-white tracking-tight">{t.resetPassword}</h2>
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t.resetPassword}</h2>
               <div className="space-y-4">
                 <div className="relative">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <input 
                     type="email" 
                     placeholder={t.email}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   />
                 </div>
                 <button 
@@ -2855,7 +2876,7 @@ export default function App() {
                     }
                   }}
                   disabled={isAuthLoading}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-full font-black shadow-[0_0_15px_rgba(5,150,105,0.4)] hover:bg-emerald-500 transition-all disabled:opacity-50"
+                  className="w-full py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-all disabled:opacity-50"
                 >
                   {isAuthLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : t.sendResetEmail}
                 </button>
@@ -2863,54 +2884,48 @@ export default function App() {
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="w-24 h-24 bg-[#121c15] rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.25)] relative overflow-hidden">
-                <Leaf className="text-emerald-400 relative z-10" size={44} />
-                <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse"></div>
+              <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100 relative overflow-hidden">
+                <Leaf className="text-emerald-500 relative z-10" size={36} />
               </div>
               
               <div className="space-y-1 mb-8">
-                <h1 className="text-3xl font-black tracking-tight mb-2 flex justify-center gap-2">
-                  <span className="text-white uppercase">{title1}</span>
-                  <span className="text-emerald-400 uppercase">{title2}</span>
+                <h1 className="text-2xl font-black tracking-tight mb-2 flex justify-center gap-2">
+                  <span className="text-slate-900 uppercase">{title1}</span>
+                  <span className="text-emerald-500 uppercase">{title2}</span>
                 </h1>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{t.subtitle}</p>
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{t.subtitle}</p>
               </div>
 
-              <div className="text-slate-400 text-xs leading-relaxed mb-6 px-2 font-medium">
-                {language === 'fr' 
-                  ? "Connectez votre profil neural pour commencer à surveiller vos actifs botaniques avec une analyse de croissance pilotée par l'IA et un suivi de santé en temps réel."
-                  : language === 'en'
-                  ? "Connect your neural profile to begin monitoring your botanical assets with AI-driven growth analysis and real-time health tracking."
-                  : "قم بتوصيل ملفك العصبي لبدء مراقبة أصولك النباتية من خلال تحليل النمو المدفوع بالذكاء الاصطناعي وتتبع الصحة في الوقت الفعلي."}
+              <div className="text-slate-500 text-sm leading-relaxed mb-6 px-2">
+                Connectez-vous pour commencer à numériser et analyser vos cultures avec l'IA.
               </div>
 
               {authError && (
                 authError.includes('auth/unauthorized-domain') || authError.includes('unauthorized-domain') ? (
-                  <div className="p-4 bg-amber-950/30 border border-amber-900/50 rounded-2xl flex flex-col gap-3 text-amber-400 text-xs text-left mb-6">
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col gap-2 text-amber-800 text-sm text-left mb-6">
                     <div className="flex items-center gap-2 font-bold">
                       <AlertCircle className="shrink-0" size={18} />
                       <span>Domaine non autorisé</span>
                     </div>
-                    <p className="opacity-90 leading-relaxed font-medium">
+                    <p className="opacity-90 leading-relaxed font-medium text-xs">
                       Le domaine n'est pas autorisé dans Firebase.
                     </p>
                   </div>
                 ) : (
-                  <div className="p-4 bg-red-950/30 border border-red-900/50 rounded-2xl flex items-center gap-3 text-red-400 text-xs font-bold mb-6">
-                    <AlertCircle size={16} className="shrink-0" />
-                    <span className="text-left">
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-700 text-sm font-medium mb-6 text-left">
+                    <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                    <span>
                       {authError.includes('auth/invalid-credential') ? t.invalidCredentials : 
                        authError.includes('auth/too-many-requests') ? t.accountLocked : 
-                       authError.includes('auth/network-request-failed') ? t.networkIssue : t.authError}
+                       authError.includes('auth/network-request-failed') ? t.networkIssue : 
+                       (authError.includes('GoogleAuth:') ? authError : t.authError + ' : ' + authError)}
                     </span>
                   </div>
                 )
               )}
 
               <div className="flex flex-col gap-3">
-                <motion.button 
-                  whileHover={{ scale: 1.03, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
+                <button 
                   onClick={async () => {
                     setIsAuthLoading(true);
                     setAuthError(null);
@@ -2918,62 +2933,69 @@ export default function App() {
                     try {
                       await signInWithGoogle();
                     } catch (e: any) {
-                      setAuthError(e.code || e.message || String(e));
+                      const errMsg = e.message || String(e);
+                      if (errMsg.includes('12500')) {
+                        setAuthError(`GoogleAuth: Erreur 12500 - L'ID de client OAuth web est manquant ou incorrect (veuillez configurer serverClientId).`);
+                      } else if (errMsg.includes('10')) {
+                        setAuthError(`GoogleAuth: Erreur 10 - Developer Error. Configuration de la signature SHA-1 non liée.`);
+                      } else {
+                        setAuthError(`GoogleAuth: ${errMsg}`);
+                      }
                       setIsGoogleConnecting(false);
                     } finally {
                       setIsAuthLoading(false);
                     }
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-emerald-500 to-[#124227] text-white force-text-white rounded-full font-black flex items-center justify-center gap-3 hover:opacity-90 transition-all shadow-[0_0_15px_rgba(52,211,153,0.2)] cursor-pointer"
+                  className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm cursor-pointer"
                 >
-                  <Globe size={18} className="opacity-90 text-white force-text-white" />
-                  {t.connect?.toUpperCase() || "CONNECT WITH GOOGLE"}
-                </motion.button>
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5" />
+                  {t.connect || "Se connecter avec Google"}
+                </button>
               </div>
 
               <div className="relative mt-8 mb-6">
-                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-[#161c18] px-4 text-slate-400">Ou utiliser un email</span></div>
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+                <div className="relative flex justify-center text-xs font-bold uppercase tracking-wider"><span className="bg-white px-4 text-slate-400">Ou avec email</span></div>
               </div>
 
               <div className="space-y-4">
                 {authMode === 'signup' && (
                   <div className="relative">
-                    <UserIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input 
                       type="text" 
                       placeholder="Nom complet"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     />
                   </div>
                 )}
                 <div className="relative">
-                  <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <input 
                     type="email" 
                     placeholder={t.email}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                   <input 
                     type="password" 
                     placeholder={t.password}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-14 pr-6 py-4 bg-[#0d120f] rounded-full border border-white/5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                    className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                   />
                 </div>
 
                 {authMode === 'login' && (
                   <button 
                     onClick={() => setAuthMode('forgotPassword')}
-                    className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest hover:text-emerald-400 hover:underline block ml-auto px-2"
+                    className="text-xs font-bold text-emerald-600 hover:text-emerald-500 block ml-auto px-1"
                   >
                     {t.forgotPassword}
                   </button>
@@ -2999,21 +3021,21 @@ export default function App() {
                     }
                   }}
                   disabled={isAuthLoading}
-                  className="w-full py-4 bg-[#161c18]/5 text-white rounded-full font-black border border-white/10 hover:bg-[#161c18]/10 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full py-4 bg-emerald-600 border border-transparent text-white rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isAuthLoading ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div> : (authMode === 'login' ? t.login : t.signup)}
                 </motion.button>
               </div>
 
               <div className="pt-6">
-                <p className="text-[#374151] text-[9px] font-black uppercase tracking-[0.2em] mb-4">
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.1em] mb-4">
                   SÉCURITÉ REQUISE
                 </p>
-                <p className="text-xs text-slate-500 font-medium">
+                <p className="text-sm text-slate-600 font-medium">
                   {authMode === 'login' ? "Pas encore de compte ?" : "Déjà un compte ?"}
                   <button 
                     onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')}
-                    className="ml-2 text-emerald-500 font-bold hover:text-emerald-400 hover:underline"
+                    className="ml-2 text-emerald-600 font-bold hover:text-emerald-500 hover:underline"
                   >
                     {authMode === 'login' ? t.signup : t.login}
                   </button>
