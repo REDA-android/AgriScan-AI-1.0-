@@ -19,6 +19,12 @@ import { getFirestore, doc, getDocFromServer, initializeFirestore, persistentLoc
 import { getStorage, ref, getDownloadURL, uploadBytes } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
+// Initialisation native de GoogleAuth pour Capacitor
+if (Capacitor.isNativePlatform()) {
+  GoogleAuth.initialize();
+}
 
 // Import the Firebase configuration
 import configData from '../firebase-applet-config.json';
@@ -95,33 +101,41 @@ export const signInWithGoogle = async () => {
     });
 
     if (isNative) {
-      console.log("Environnement Natif détecté - Tentative d'authentification");
+      console.log("Environnement Natif détecté - Tentative d'authentification native Google");
       try {
-        // En Capacitor, signInWithPopup peut fonctionner si le bridge est bien configuré
-        const result = await signInWithPopup(auth, googleProvider);
+        const user = await GoogleAuth.signIn();
+        if (!user || !user.authentication.idToken) {
+          throw new Error("Échec de l'authentification native : Pas d'idToken reçu.");
+        }
+        
+        const credential = GoogleAuthProvider.credential(user.authentication.idToken);
+        const result = await signInWithCredential(auth, credential);
+        console.log("Authentification native réussie");
         return result.user;
       } catch (e: any) {
-        console.error("Erreur signInWithPopup native:", e);
-        // Si popup échoue (souvent bloqué), on tente signInWithRedirect
-        // Note: signInWithRedirect nécessite que le domaine de l'app soit autorisé dans Firebase
-        try {
-          await signInWithRedirect(auth, googleProvider);
-        } catch (redirectError: any) {
-          console.error("Erreur secondary signInWithRedirect native:", redirectError);
-          throw redirectError;
-        }
-        return null;
+        console.error("Erreur GoogleAuth native:", e);
+        // On ne replie pas sur signInWithPopup ici car GoogleAuth est le moyen propre pour Android
+        throw e;
       }
     }
 
-    if (window.self !== window.top) {
-      console.warn("L'authentification s'exécute dans un iframe - Utilisation de signInWithRedirect pour éviter les blocages.");
-      await signInWithRedirect(auth, googleProvider);
+    // Pour le web (preview et navigateur), on tente d'abord signInWithPopup
+    // C'est plus fiable que le redirect dans un iframe
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      return result.user;
+    } catch (popupError: any) {
+      console.log("Erreur signInWithPopup, tentative fallback redirect:", popupError.code);
+      // Fallback sur redirect seulement si le popup est bloqué
+      if (popupError.code === 'auth/popup-blocked') {
+        alert("La fenêtre de connexion a été bloquée. Veuillez autoriser les popups ou utiliser le mode plein écran.");
+      }
+      // On tente quand même le redirect si le popup a échoué (sauf si annulé par l'utilisateur)
+      if (popupError.code !== 'auth/popup-closed-by-user') {
+        await signInWithRedirect(auth, googleProvider);
+      }
       return null;
     }
-    
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
   } catch (error: any) {
     if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
       console.log("La fenêtre d'authentification a été fermée ou annulée.");
