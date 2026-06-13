@@ -264,7 +264,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
       className="fixed inset-0 z-[100] bg-[#161c18] flex flex-col"
       dir={isArabic ? 'rtl' : 'ltr'}
     >
-      <header className="p-4 border-b border-white/5 flex items-center gap-4 sticky top-0 bg-[#161c18] z-10">
+      <header className="px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] border-b border-white/5 flex items-center gap-4 sticky top-0 bg-[#161c18] z-10">
         <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors">
           <ChevronLeft size={24} />
         </button>
@@ -286,7 +286,7 @@ function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelet
         )}
       </header>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-12">
+      <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-[calc(3rem+env(safe-area-inset-bottom))]">
         <div className="space-y-4">
           <div className="relative rounded-3xl overflow-hidden shadow-lg border border-white/5 bg-[#0d120f] min-h-[300px] flex items-center justify-center group">
             <AnimatePresence mode="wait">
@@ -3123,7 +3123,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Header */}
-      <header className="p-6 bg-[#161c18] border-b border-white/5 flex justify-between items-center sticky top-0 z-50">
+      <header className="px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] bg-[#161c18] border-b border-white/5 flex justify-between items-center sticky top-0 z-50">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex gap-1 text-white">AgroScan <span className="text-emerald-400">IA</span></h1>
           <div className="flex items-center gap-2 mt-1">

@@ -75,14 +75,31 @@ export const googleProvider = new GoogleAuthProvider();
 
 import { uploadToCloudinary } from './services/cloudinaryService';
 
-export const uploadImage = async (file: Blob, path: string, onProgress?: (progress: number) => void) => {
+export const uploadImage = async (file: Blob, filePath: string, onProgress?: (progress: number) => void) => {
   const useCloudinary = !!import.meta.env.VITE_CLOUDINARY_CLOUD_NAME && !!import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-  if (!useCloudinary) {
-    throw new Error("Configuration Cloudinary manquante. Veuillez renseigner VITE_CLOUDINARY_CLOUD_NAME et VITE_CLOUDINARY_UPLOAD_PRESET dans les paramètres.");
+  if (useCloudinary) {
+    console.log("Upload via Cloudinary...");
+    return await uploadToCloudinary(file, onProgress);
   }
   
-  console.log("Upload via Cloudinary...");
-  return await uploadToCloudinary(file, onProgress);
+  if (!storage) {
+    throw new Error("Firebase Storage n'est pas initialisé et Cloudinary n'est pas configuré.");
+  }
+
+  console.log("Upload via Firebase Storage...");
+  if (onProgress) onProgress(10);
+  
+  const storageRef = ref(storage, filePath);
+  
+  // We use uploadBytes since uploadBytesResumable might not be imported or needed 
+  // (or we can just skip exact progress updates for simple uploadBytes)
+  await uploadBytes(storageRef, file);
+  if (onProgress) onProgress(80);
+  
+  const url = await getDownloadURL(storageRef);
+  if (onProgress) onProgress(100);
+  
+  return url;
 };
 
 let isSigningIn = false;
