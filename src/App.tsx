@@ -2801,7 +2801,7 @@ export default function App() {
     const title2 = titleParts.slice(1).join(' ') || 'IA';
 
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans pt-[calc(1.5rem+env(safe-area-inset-top))] pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
