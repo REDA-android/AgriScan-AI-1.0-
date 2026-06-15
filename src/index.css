@@ -134,7 +134,7 @@ body.light-mode button:hover.bg-white\/5 {
   background-color: #d1fae5 !important; /* emerald-100 */
 }
 
-body.light-mode .bg-[#161c18]\/80,
+body.light-mode .bg-\[\#161c18\]\/80,
 body.light-mode .bg-\[\#161c18\]\/90 {
   background-color: rgba(255, 255, 255, 0.95) !important;
   border-color: #d1fae5 !important;

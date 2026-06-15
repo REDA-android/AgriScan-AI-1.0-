@@ -48,10 +48,10 @@ export const ChatBot: React.FC = () => {
 
       {/* Chat Window */}
       <div 
-        className={`fixed bottom-0 right-0 w-full md:w-[400px] h-[80vh] md:h-[600px] md:bottom-6 md:right-6 bg-[#0d120f] md:rounded-3xl border border-white/10 shadow-2xl flex flex-col transition-transform origin-bottom-right z-[100] overflow-hidden ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 md:inset-auto md:bottom-6 md:right-6 w-full md:w-[400px] h-[100dvh] md:h-[600px] bg-[#0d120f] md:rounded-3xl border-0 md:border border-white/10 shadow-2xl flex flex-col transition-transform origin-bottom-right z-[100] overflow-hidden ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
       >
         {/* Header */}
-        <div className="bg-[#161c18] p-4 border-b border-white/5 flex items-center justify-between shrink-0">
+        <div className="bg-[#161c18] p-4 pt-[calc(1rem+env(safe-area-inset-top))] md:pt-4 border-b border-white/5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
               <Bot size={20} />
@@ -95,7 +95,7 @@ export const ChatBot: React.FC = () => {
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-[#161c18] border-t border-white/5 shrink-0">
+        <div className="p-4 bg-[#161c18] border-t border-white/5 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))] md:pb-4">
           <div className="relative flex items-center">
             <input 
               type="text" 

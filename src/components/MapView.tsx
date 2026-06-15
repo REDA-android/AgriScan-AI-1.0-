@@ -148,21 +148,21 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
   return (
     <div className="h-full w-full relative flex flex-col gap-3">
       {/* Search and Filter UI */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col gap-2">
+      <div className="absolute top-4 left-14 right-4 z-[1000] flex flex-col gap-2">
         <form onSubmit={handleSearch} className="relative group">
-          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isSearching ? 'animate-pulse text-emerald-500' : 'text-slate-400'} group-focus-within:text-emerald-500 transition-colors`} size={18} />
+          <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isSearching ? 'animate-pulse text-emerald-500' : 'text-slate-400'} group-focus-within:text-emerald-500 transition-colors`} size={16} />
           <input 
             type="text" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Lieu, parcelle ou variété..." 
-            className="w-full pl-10 pr-4 py-2.5 bg-[#161c18]/90 backdrop-blur rounded-xl shadow-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
+            className="w-full pl-9 pr-8 py-1.5 bg-[#161c18]/90 backdrop-blur rounded-xl shadow-lg border border-white/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-xs text-slate-200"
           />
           {searchQuery && (
             <button 
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-400"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
             >
               <X size={16} />
             </button>
