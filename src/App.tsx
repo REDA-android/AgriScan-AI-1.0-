@@ -1745,19 +1745,21 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            fetchWeather(pos.coords.latitude, pos.coords.longitude);
-          },
-          (err) => {
-            console.warn("Geolocation failed/denied, defaulting to Paris", err);
-            fetchWeather(48.8566, 2.3522);
-          }
-        );
-      } else {
-        fetchWeather(48.8566, 2.3522);
-      }
+      const fetchLocationAndWeather = async () => {
+        try {
+          const { Geolocation } = await import('@capacitor/geolocation');
+          // Important: Don't request permissions right away if this fires on startup 
+          // to avoid annoying the user until explicitly needed, 
+          // or use Geolocation API without assuming it works immediately if denied.
+          const pos = await Geolocation.getCurrentPosition({ timeout: 10000 });
+          fetchWeather(pos.coords.latitude, pos.coords.longitude);
+        } catch (err) {
+          console.warn("Geolocation failed/denied, defaulting to Paris", err);
+          fetchWeather(48.8566, 2.3522);
+        }
+      };
+      
+      fetchLocationAndWeather();
     }
   }, [user, language]);
 
@@ -3674,13 +3676,20 @@ export default function App() {
                   <div className="flex-1 h-px bg-white/10"></div>
                 </div>
                 <button 
-                  onClick={() => {
-                    alert("Assurez-vous d'avoir autorisé l'accès à la localisation dans votre navigateur.");
-                    navigator.geolocation.getCurrentPosition(
-                      pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-                      err => { alert(`Erreur de géolocalisation: ${err.message}`); console.log(err); },
-                      { timeout: 10000 }
-                    );
+                  onClick={async () => {
+                    try {
+                      const { Geolocation } = await import('@capacitor/geolocation');
+                      const permissions = await Geolocation.requestPermissions();
+                      if (permissions.location === 'denied') {
+                        alert("Permission de localisation refusée. Activez-la dans les paramètres de votre appareil.");
+                        return;
+                      }
+                      const pos = await Geolocation.getCurrentPosition({ timeout: 10000 });
+                      fetchWeather(pos.coords.latitude, pos.coords.longitude);
+                    } catch (err: any) {
+                      alert(`Erreur de géolocalisation: ${err.message}`); 
+                      console.log(err);
+                    }
                   }}
                   className="w-full px-4 py-3 bg-[#161c18] border border-white/5 hover:bg-white/5 text-slate-300 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
                 >

@@ -65,16 +65,17 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
   const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
 
   useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setMapCenter([position.coords.latitude, position.coords.longitude]);
-          setMapZoom(12);
-        },
-        (error) => console.warn("Geolocation error:", error),
-        { enableHighAccuracy: true }
-      );
-    }
+    const fetchLocation = async () => {
+      try {
+        const { Geolocation } = await import('@capacitor/geolocation');
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        setMapCenter([position.coords.latitude, position.coords.longitude]);
+        setMapZoom(12);
+      } catch (error) {
+        console.warn("Geolocation error:", error);
+      }
+    };
+    fetchLocation();
   }, []);
 
   const families = useMemo(() => {

@@ -163,23 +163,24 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
   const [exifDate, setExifDate] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Only set GPS if we haven't already set EXIF location
-          setCurrentLocation(prev => {
-            if (locationSource === 'exif') return prev;
-            setLocationSource('gps');
-            return {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude
-            };
-          });
-        },
-        (error) => console.warn("Geolocation error:", error),
-        { enableHighAccuracy: true }
-      );
-    }
+    const fetchLocation = async () => {
+      try {
+        const { Geolocation } = await import('@capacitor/geolocation');
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        // Only set GPS if we haven't already set EXIF location
+        setCurrentLocation(prev => {
+          if (locationSource === 'exif') return prev;
+          setLocationSource('gps');
+          return {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+        });
+      } catch (error) {
+        console.warn("Geolocation error:", error);
+      }
+    };
+    fetchLocation();
 
     if (offlineQueueCount !== undefined) {
       setOfflineQueue(offlineQueueCount);
