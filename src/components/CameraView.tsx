@@ -166,7 +166,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
     const fetchLocation = async () => {
       try {
         const { Geolocation } = await import('@capacitor/geolocation');
-        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 30000 });
         // Only set GPS if we haven't already set EXIF location
         setCurrentLocation(prev => {
           if (locationSource === 'exif') return prev;

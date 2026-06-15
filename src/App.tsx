@@ -1751,7 +1751,7 @@ export default function App() {
           // Important: Don't request permissions right away if this fires on startup 
           // to avoid annoying the user until explicitly needed, 
           // or use Geolocation API without assuming it works immediately if denied.
-          const pos = await Geolocation.getCurrentPosition({ timeout: 10000 });
+          const pos = await Geolocation.getCurrentPosition({ timeout: 30000, enableHighAccuracy: true });
           fetchWeather(pos.coords.latitude, pos.coords.longitude);
         } catch (err) {
           console.warn("Geolocation failed/denied, defaulting to Paris", err);
@@ -3684,7 +3684,7 @@ export default function App() {
                         alert("Permission de localisation refusée. Activez-la dans les paramètres de votre appareil.");
                         return;
                       }
-                      const pos = await Geolocation.getCurrentPosition({ timeout: 10000 });
+                      const pos = await Geolocation.getCurrentPosition({ timeout: 30000, enableHighAccuracy: true });
                       fetchWeather(pos.coords.latitude, pos.coords.longitude);
                     } catch (err: any) {
                       alert(`Erreur de géolocalisation: ${err.message}`); 
