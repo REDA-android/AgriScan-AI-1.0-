@@ -5,7 +5,7 @@ import {
   TrendingUp, Calendar, Image as ImageIcon, Trash2, Globe, Cloud, Download, Upload,
   MapPin, User as UserIcon, Mail, Lock, AlertCircle, ArrowLeft, ChevronLeft,
   Book, Filter, Info, Maximize2, CheckSquare, Square, ChevronRight, Star, MessageSquare, Bot, Leaf, CheckCircle,
-  Sun, Moon, CloudLightning, CloudDrizzle, CloudRain
+  Sun, Moon, CloudLightning, CloudDrizzle, CloudRain, ChevronDown
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -1198,6 +1198,7 @@ export default function App() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLiteRTReady, setIsLiteRTReady] = useState(false);
   const [localModelPath, setLocalModelPath] = useState(() => localStorage.getItem('local_model_path') || '/assets/models/plant_classifier.tflite');
+  const [showEdgeAISettings, setShowEdgeAISettings] = useState(false);
 
   // Initialize LiteRT
   useEffect(() => {
@@ -3439,50 +3440,74 @@ export default function App() {
                 />
                 
                 {/* Edge AI Settings Section */}
-                <div className="p-4 bg-slate-900/40 rounded-2xl border border-white/5 backdrop-blur-xl">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
+                <div className="overflow-hidden">
+                  <button 
+                    onClick={() => setShowEdgeAISettings(!showEdgeAISettings)}
+                    className="w-full flex items-center justify-between p-3 bg-slate-900/40 rounded-xl border border-white/5 backdrop-blur-xl group hover:border-emerald-500/20 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${isLiteRTReady ? 'bg-emerald-500 animate-pulse' : 'bg-slate-600'}`} />
-                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Configuration Edge AI</h3>
+                      <div className="text-left">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-emerald-400 transition-colors">Lab : IA Locale (Mode Offline)</h3>
+                        <p className="text-[9px] text-slate-500 font-medium">Moteur LiteRT v0.10.0</p>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400/70">LiteRT v0.10.0</span>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                      {[
-                        { name: 'CropNet (Maladies)', path: '/assets/models/plant_classifier.tflite' },
-                        { name: 'AIy Plants', path: '/assets/models/aiy_plants.tflite' },
-                        { name: 'MobileNet V3', path: '/assets/models/mobilenet_v3.tflite' },
-                        { name: 'EfficientNet', path: '/assets/models/efficientnet_lite.tflite' }
-                      ].map((m) => (
-                        <button
-                          key={m.path}
-                          onClick={() => updateLocalModel(m.path)}
-                          className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
-                            localModelPath === m.path 
-                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' 
-                            : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'
-                          }`}
-                        >
-                          {m.name}
-                        </button>
-                      ))}
-                    </div>
+                    <ChevronDown size={14} className={`text-slate-500 transition-transform duration-300 ${showEdgeAISettings ? 'rotate-180' : ''}`} />
+                  </button>
 
-                    <div className="relative">
-                      <input 
-                        type="text"
-                        value={localModelPath}
-                        onChange={(e) => updateLocalModel(e.target.value)}
-                        placeholder="Chemin du modèle personnalisé..."
-                        className="w-full bg-[#0d120f] border border-white/5 rounded-xl px-3 py-2 text-[10px] font-mono text-emerald-400 focus:outline-none focus:border-emerald-500/30"
-                      />
-                      <p className="mt-1 text-[9px] text-slate-500 italic pl-1">
-                        Dossier racine : /public/assets/models/
-                      </p>
-                    </div>
-                  </div>
+                  <AnimatePresence>
+                    {showEdgeAISettings && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      >
+                        <div className="mt-2 p-4 bg-slate-900/60 rounded-xl border border-white/5 space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block ml-1">Choix du modèle (4 experts)</label>
+                            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                              {[
+                                { name: 'CropNet', desc: 'Maladies', path: '/assets/models/plant_classifier.tflite' },
+                                { name: 'AIy Plant', desc: '+2000 espèces', path: '/assets/models/aiy_plants.tflite' },
+                                { name: 'MobileNet', desc: 'Vitesse', path: '/assets/models/mobilenet_v3.tflite' },
+                                { name: 'EfficientNet', desc: 'Précision', path: '/assets/models/efficientnet_lite.tflite' }
+                              ].map((m) => (
+                                <button
+                                  key={m.path}
+                                  onClick={() => updateLocalModel(m.path)}
+                                  className={`flex-none px-3 py-2 rounded-lg text-[10px] font-bold transition-all border flex flex-col items-center gap-0.5 ${
+                                    localModelPath === m.path 
+                                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' 
+                                    : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'
+                                  }`}
+                                >
+                                  <span>{m.name}</span>
+                                  <span className="text-[8px] opacity-60 font-medium uppercase tracking-tighter">{m.desc}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block ml-1">Chemin personnalisé</label>
+                            <div className="relative">
+                              <input 
+                                type="text"
+                                value={localModelPath}
+                                onChange={(e) => updateLocalModel(e.target.value)}
+                                placeholder="ex: /assets/models/mon_modele.tflite"
+                                className="w-full bg-[#0d120f] border border-white/5 rounded-xl px-3 py-2.5 text-[10px] font-mono text-emerald-400 focus:outline-none focus:border-emerald-500/30 transition-all shadow-inner"
+                              />
+                              <p className="mt-1 text-[9px] text-slate-500 italic pl-1 flex items-center gap-1">
+                                <Info size={10} /> Les fichiers doivent être dans <span className="text-emerald-500/70">/public/assets/models/</span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             )}
