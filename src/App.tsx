@@ -3123,7 +3123,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5" dir={isArabic ? 'rtl' : 'ltr'}>
+    <div className="h-[100dvh] overflow-hidden bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5 relative" dir={isArabic ? 'rtl' : 'ltr'}>
       {/* Header */}
       <header className="px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))] bg-[#161c18] border-b border-white/5 flex justify-between items-center sticky top-0 z-50">
         <div>
@@ -3303,7 +3303,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-4 pb-24">
+      <main className="flex-1 overflow-y-auto p-4 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] scroll-smooth">
         {activeTab === 'scan' && (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -3704,7 +3704,7 @@ export default function App() {
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="h-[calc(100vh-200px)] flex flex-col"
+            className="h-full flex flex-col"
           >
             <MapView 
               markers={observations.map(o => ({
@@ -4157,52 +4157,52 @@ export default function App() {
       <ChatBot />
 
       {/* Bottom Navigation - Liquid Glass Style */}
-      <nav className="fixed bottom-6 left-4 right-4 max-w-md mx-auto bg-white/5 backdrop-blur-3xl border border-white/10 p-2 rounded-[2.5rem] flex justify-around items-center z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)]">
-        <div className="absolute -top-3 right-6 flex items-center gap-1.5 bg-[#161c18] border border-white/10 rounded-full px-2.5 py-1 shadow-lg pointer-events-none">
+      <nav className="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-white/5 backdrop-blur-3xl border border-white/10 p-2 rounded-[2.5rem] flex justify-around items-center z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)]">
+        <div className="absolute -top-3 right-6 flex items-center gap-1.5 bg-[#161c18] border border-white/10 rounded-full px-2 py-0.5 shadow-lg pointer-events-none">
           <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? (offlineObservations.length === 0 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse') : 'bg-red-500'}`} />
-          <span className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-[7px] font-bold uppercase tracking-wider text-slate-400">
             {!isOnline ? 'Hors ligne' : (offlineObservations.length > 0 ? (isSyncing ? 'Sync...' : `${offlineObservations.length} en attente`) : 'Synchronisé')}
           </span>
         </div>
         
         <button 
           onClick={() => setActiveTab('map')}
-          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'map' ? 'text-emerald-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'map' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'map' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
-            <MapIcon size={20} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
+          <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'map' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
+            <MapIcon size={18} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
           </div>
           <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'map' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.map}</span>
         </button>
 
         <button 
           onClick={() => setActiveTab('weather')}
-          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'weather' ? 'text-blue-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'weather' ? 'text-blue-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'weather' ? 'btn-glass shadow-[0_0_15px_rgba(59,130,246,0.3)] text-blue-400 border-blue-400/30' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
-            <Cloud size={20} strokeWidth={activeTab === 'weather' ? 2.5 : 2} />
+          <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'weather' ? 'btn-glass shadow-[0_0_15px_rgba(59,130,246,0.3)] text-blue-400 border-blue-400/30' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
+            <Cloud size={18} strokeWidth={activeTab === 'weather' ? 2.5 : 2} />
           </div>
           <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'weather' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.weather}</span>
         </button>
 
         <button 
           onClick={() => { setActiveTab('scan'); setAnalysis(null); triggerHaptic('light'); }}
-          className="relative -top-6"
+          className="relative -top-5"
         >
-          <div className={`p-4 rounded-full shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 active:scale-90 ${activeTab === 'scan' ? 'btn-glass-primary scale-110 ring-4 ring-emerald-500/20' : 'btn-glass-primary hover:scale-105'}`}>
-            <Plus size={32} strokeWidth={3} className="text-emerald-300 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+          <div className={`p-3 rounded-full shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-all duration-500 active:scale-90 ${activeTab === 'scan' ? 'btn-glass-primary scale-105 ring-4 ring-emerald-500/20' : 'btn-glass-primary hover:scale-105'}`}>
+            <Plus size={26} strokeWidth={3} className="text-emerald-300 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
           </div>
-          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
             <span className={`text-[8px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'scan' ? 'text-emerald-400 opacity-100' : 'text-slate-400 opacity-0'}`}>{t.scan}</span>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('catalog')}
-          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'catalog' ? 'text-emerald-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'catalog' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'catalog' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
-            <Book size={20} strokeWidth={activeTab === 'catalog' ? 2.5 : 2} />
+          <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'catalog' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
+            <Book size={18} strokeWidth={activeTab === 'catalog' ? 2.5 : 2} />
           </div>
           <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'catalog' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.catalog}</span>
         </button>
@@ -4210,10 +4210,10 @@ export default function App() {
         {isAdmin && (
           <button 
             onClick={() => setActiveTab('admin')}
-            className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'admin' ? 'text-emerald-400 scale-110' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'admin' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
           >
-            <div className={`p-2.5 rounded-2xl transition-all duration-300 ${activeTab === 'admin' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
-              <RefreshCw size={20} strokeWidth={activeTab === 'admin' ? 2.5 : 2} />
+            <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'admin' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
+              <RefreshCw size={18} strokeWidth={activeTab === 'admin' ? 2.5 : 2} />
             </div>
             <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'admin' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.admin}</span>
           </button>

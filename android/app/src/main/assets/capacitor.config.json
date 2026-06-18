@@ -13,7 +13,7 @@
 				"profile",
 				"email"
 			],
-			"serverClientId": "969613404131-mub77m6o74k3p8j88o1u7v9p9p9p9p9p9p.apps.googleusercontent.com",
+			"serverClientId": "VOTRE_ID_WEB_FIREBASE.apps.googleusercontent.com",
 			"forceCodeForRefreshToken": true
 		}
 	}

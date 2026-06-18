@@ -2,7 +2,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Search, Filter, X, MapPin } from 'lucide-react';
 import { useState, useMemo, FormEvent, useEffect } from 'react';
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
 
 // Fix for default marker icons in Leaflet with React
 const DefaultIcon = L.icon({
@@ -149,7 +149,7 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
   return (
     <div className="h-full w-full relative flex flex-col gap-3">
       {/* Search and Filter UI */}
-      <div className="absolute top-4 left-14 right-4 z-[1000] flex flex-col gap-2">
+      <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col gap-2">
         <form onSubmit={handleSearch} className="relative group">
           <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isSearching ? 'animate-pulse text-emerald-500' : 'text-slate-400'} group-focus-within:text-emerald-500 transition-colors`} size={16} />
           <input 
@@ -230,7 +230,8 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
       </div>
 
       <div className="flex-1 rounded-2xl overflow-hidden shadow-inner border border-black/5 relative">
-        <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }}>
+        <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+          <ZoomControl position="topright" />
           <ChangeView center={mapCenter} zoom={mapZoom} />
           <MapEvents onMapClick={onMapClick} />
           {mapType === 'standard' ? (

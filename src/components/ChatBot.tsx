@@ -41,7 +41,7 @@ export const ChatBot: React.FC = () => {
       {/* Floating Action Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 md:right-6 md:bottom-24 w-14 h-14 bg-gradient-to-r from-emerald-400 to-[#124227] rounded-full flex items-center justify-center text-[#0d120f] shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:scale-110 transition-all z-[90] ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-4 md:right-6 md:bottom-24 w-14 h-14 bg-gradient-to-r from-emerald-400 to-[#124227] rounded-full flex items-center justify-center text-[#0d120f] shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:scale-110 transition-all z-[90] ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
       >
         <MessageSquare size={24} className="fill-current" />
       </button>
