@@ -2227,28 +2227,38 @@ export default function App() {
 
         const observationData = {
           userId: user.uid,
-          location: item.metadata,
+          location: { 
+            lat: (item.metadata as any).lat || 0, 
+            lng: (item.metadata as any).lng || 0 
+          },
           createdAt: serverTimestamp(),
           capturedAt: item.capturedAt || new Date().toISOString(),
           imageUrl: storageUrl,
           imageUrls: [storageUrl],
-          culture: item.metadata.culture || "En attente d'analyse",
-          variety: item.metadata.variety || "En attente d'analyse",
-          species: item.metadata.species || "Inconnu",
-          family: item.metadata.family || "Inconnu",
+          culture: (item.metadata as any).culture || "En attente d'analyse",
+          variety: (item.metadata as any).variety || "En attente d'analyse",
+          species: (item.metadata as any).species || "Inconnu",
+          family: (item.metadata as any).family || "Inconnu",
+          domain: (item.metadata as any).domain || "Général",
           bbchDominant: "",
           bbchSecondary: [],
           organCounts: { flowers: 0, fruits: 0, details: "" },
-          phenotypicTraits: { color: '?', healthStatus: '?', diseases: [] },
-          userNotes: item.metadata.userNotes || "Captur hors-ligne",
+          phenotypicTraits: { 
+            color: '?', 
+            shape: '?', 
+            size: '?', 
+            healthStatus: '?', 
+            diseasesOrDeficiencies: [] 
+          },
+          userNotes: (item.metadata as any).userNotes || "Capture hors-ligne",
           status: 'pending',
-          plantingDate: item.metadata.plantingDate || null,
-          breeder: item.metadata.breeder || null,
-          pruningDate: item.metadata.pruningDate || null,
-          harvestQuantity: item.metadata.harvestQuantity || null,
-          density: item.metadata.density || null,
-          fruitFirmness: item.metadata.fruitFirmness || null,
-          defects: item.metadata.defects || null,
+          plantingDate: (item.metadata as any).plantingDate || null,
+          breeder: (item.metadata as any).breeder || null,
+          pruningDate: (item.metadata as any).pruningDate || null,
+          harvestQuantity: (item.metadata as any).harvestQuantity || null,
+          density: (item.metadata as any).density || null,
+          fruitFirmness: (item.metadata as any).fruitFirmness || null,
+          defects: (item.metadata as any).defects || null,
         };
         
         const docRef = await addDoc(collection(db, 'observations'), observationData);
@@ -3439,11 +3449,15 @@ export default function App() {
                   offlineQueueCount={offlineObservations.length}
                 />
                 
-                {/* Edge AI Settings Section */}
+                {/* Edge AI Settings - Optimized for Discretion */}
                 <div className="overflow-hidden">
                   <button 
                     onClick={() => setShowEdgeAISettings(!showEdgeAISettings)}
-                    className="w-full flex items-center justify-between p-3 bg-slate-900/40 rounded-xl border border-white/5 backdrop-blur-xl group hover:border-emerald-500/20 transition-all"
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
+                      showEdgeAISettings 
+                      ? 'bg-slate-900/60 border-emerald-500/30' 
+                      : 'bg-slate-900/40 border-white/5 opacity-60 hover:opacity-100'
+                    } backdrop-blur-xl group`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${isLiteRTReady ? 'bg-emerald-500 animate-pulse' : 'bg-slate-600'}`} />

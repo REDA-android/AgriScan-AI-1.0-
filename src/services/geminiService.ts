@@ -42,8 +42,9 @@ export function clearAIInstance() {
 }
 
 const getApiUrl = () => {
-  // Always use the relative proxy if on the same origin (standard for this setup)
-  return import.meta.env.VITE_API_URL || '';
+  // Always use the relative proxy if on the same origin
+  const baseUrl = import.meta.env.VITE_API_URL || '';
+  return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 };
 
 export async function chatWithGemini(message: string, history: { role: 'user'|'model'; text: string }[]): Promise<string> {
@@ -51,17 +52,23 @@ export async function chatWithGemini(message: string, history: { role: 'user'|'m
   const apiUrl = getApiUrl();
 
   // In standard web mode, we prefer the server-side proxy
-  // We only use direct client mode if apiUrl is missing AND userKey is present
   const useProxy = (typeof window !== 'undefined' && !window.location.protocol.startsWith('file')) || !userKey;
 
   if (useProxy) {
     try {
-      const endpoint = `${apiUrl}/api/gemini/chat`.replace(/\/+api/, '/api');
+      const endpoint = `${apiUrl}/api/gemini/chat`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, history, userKey })
       });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("[Chat] Unexpected response from server:", text.substring(0, 100));
+        throw new Error("Le serveur a renvoyé une réponse invalide (HTML au lieu de JSON).");
+      }
 
       const data = await response.json();
       if (!response.ok) {
@@ -105,12 +112,19 @@ export async function analyzePlantImage(images: { base64Image: string, mimeType:
 
   if (useProxy) {
     try {
-      const endpoint = `${apiUrl}/api/gemini/analyze`.replace(/\/+api/, '/api');
+      const endpoint = `${apiUrl}/api/gemini/analyze`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ images, userKey })
       });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("[Analyze] Unexpected response from server:", text.substring(0, 100));
+        throw new Error("Le serveur a renvoyé une réponse invalide (HTML au lieu de JSON).");
+      }
 
       const data = await response.json();
       if (!response.ok) {

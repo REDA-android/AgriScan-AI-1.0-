@@ -76,6 +76,9 @@ body.light-mode .bg-\[\#111412\],
 body.light-mode .bg-\[\#161c18\],
 body.light-mode .bg-\[\#0d120f\],
 body.light-mode .bg-\[\#121c15\],
+body.light-mode .bg-slate-900,
+body.light-mode .bg-slate-900\/40,
+body.light-mode .bg-slate-900\/60,
 body.light-mode .btn-glass {
   background-color: #ffffff !important;
   border-color: #d1fae5 !important; /* emerald-100 */
@@ -84,53 +87,87 @@ body.light-mode .btn-glass {
 body.light-mode .bg-\[\#111412\]\/50,
 body.light-mode .bg-\[\#161c18\]\/50,
 body.light-mode .bg-\[\#0d120f\]\/50,
-body.light-mode .bg-\[\#121c15\]\/50 {
-  background-color: rgba(255, 255, 255, 0.5) !important;
+body.light-mode .bg-\[\#121c15\]\/50,
+body.light-mode .bg-slate-800\/50,
+body.light-mode .bg-slate-900\/50 {
+  background-color: rgba(255, 255, 255, 0.7) !important;
 }
 
 body.light-mode .bg-\[\#111412\]\/20,
 body.light-mode .bg-\[\#161c18\]\/20,
 body.light-mode .bg-\[\#0d120f\]\/20,
-body.light-mode .bg-\[\#121c15\]\/20 {
+body.light-mode .bg-\[\#121c15\]\/20,
+body.light-mode .bg-slate-900\/20 {
   background-color: rgba(16, 185, 129, 0.05) !important;
 }
 
 body.light-mode .bg-\[\#111412\]\/10,
 body.light-mode .bg-\[\#161c18\]\/10,
 body.light-mode .bg-\[\#0d120f\]\/10,
-body.light-mode .bg-\[\#121c15\]\/10 {
+body.light-mode .bg-\[\#121c15\]\/10,
+body.light-mode .bg-slate-900\/10 {
   background-color: rgba(16, 185, 129, 0.03) !important;
 }
 
-body.light-mode .border-\[\#111412\] {
-  border-color: #f0fdf4 !important;
+body.light-mode .border-\[\#111412\],
+body.light-mode .border-slate-800,
+body.light-mode .border-slate-900 {
+  border-color: #d1fae5 !important;
 }
 
-body.light-mode .text-white,
+body.light-mode .text-slate-50,
+body.light-mode .text-slate-100,
 body.light-mode .text-slate-200,
 body.light-mode .text-slate-300,
 body.light-mode .text-slate-400 {
-  color: #064e3b !important;
-}
-
-body.light-mode .force-text-white {
-  color: #ffffff !important;
+  color: #064e3b !important; /* emerald-950 */
 }
 
 body.light-mode .text-slate-500 {
   color: #059669 !important; /* emerald-600 */
 }
 
+body.light-mode .text-slate-600 {
+  color: #047857 !important; /* emerald-700 */
+}
+
+body.light-mode .text-purple-300,
+body.light-mode .text-purple-400 {
+  color: #7e22ce !important; /* purple-700 */
+}
+
+body.light-mode .text-sky-300,
+body.light-mode .text-sky-400 {
+  color: #0369a1 !important; /* sky-700 */
+}
+
+body.light-mode .text-teal-300,
+body.light-mode .text-teal-400 {
+  color: #0f766e !important; /* teal-700 */
+}
+
+body.light-mode .text-blue-300,
+body.light-mode .text-blue-400 {
+  color: #1d4ed8 !important; /* blue-700 */
+}
+
+body.light-mode .force-text-white {
+  color: #ffffff !important;
+}
+
 body.light-mode .border-white\/5,
-body.light-mode .border-white\/10 {
+body.light-mode .border-white\/10,
+body.light-mode .border-white\/20 {
   border-color: #d1fae5 !important;
 }
 
-body.light-mode .bg-white\/5 {
-  background-color: #ecfdf5 !important; /* emerald-50 */
+body.light-mode .bg-white\/5,
+body.light-mode .bg-white\/10 {
+  background-color: #f0fdf4 !important; /* emerald-50 */
 }
 
-body.light-mode button:hover.bg-white\/5 {
+body.light-mode button:hover.bg-white\/5,
+body.light-mode button:hover.bg-white\/10 {
   background-color: #d1fae5 !important; /* emerald-100 */
 }
 
@@ -147,8 +184,19 @@ body.light-mode input, body.light-mode textarea {
 }
 
 body.light-mode .text-emerald-400,
-body.light-mode .text-emerald-300 {
+body.light-mode .text-emerald-300,
+body.light-mode .text-emerald-200 {
   color: #059669 !important; /* emerald-600 */
+}
+
+body.light-mode .text-red-400,
+body.light-mode .text-red-300 {
+  color: #dc2626 !important; /* red-600 */
+}
+
+body.light-mode .text-amber-400,
+body.light-mode .text-amber-300 {
+  color: #d97706 !important; /* amber-600 */
 }
 
 body.light-mode .btn-glass-primary {
@@ -161,7 +209,8 @@ body.light-mode .btn-glass-primary:hover {
   background-color: #059669 !important; /* emerald-600 */
 }
 
-body.light-mode .btn-glass-primary .text-emerald-300 {
+body.light-mode .btn-glass-primary .text-emerald-300,
+body.light-mode .btn-glass-primary .text-emerald-400 {
   color: #ffffff !important;
 }
 
@@ -171,21 +220,41 @@ body.light-mode .bg-emerald-500\/30 {
   background-color: rgba(16, 185, 129, 0.1) !important;
 }
 
+body.light-mode .bg-red-500\/10,
+body.light-mode .bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+body.light-mode .bg-blue-500\/10,
+body.light-mode .bg-blue-500\/20 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
 body.light-mode .border-emerald-500\/20,
-body.light-mode .border-emerald-500\/30 {
+body.light-mode .border-emerald-500\/30,
+body.light-mode .border-emerald-500\/40 {
   border-color: rgba(16, 185, 129, 0.3) !important;
 }
 
-body.light-mode .shadow-emerald-900\/10 {
-  shadow-color: rgba(16, 185, 129, 0.1) !important;
+body.light-mode .border-red-500\/20 {
+  border-color: rgba(239, 68, 68, 0.3) !important;
 }
 
+body.light-mode .shadow-emerald-900\/5,
+body.light-mode .shadow-emerald-900\/10,
 body.light-mode .shadow-emerald-950\/10 {
-  shadow-color: rgba(16, 185, 129, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08) !important;
 }
 
-body.light-mode .placeholder-slate-600 {
-  color: #64748b !important; /* slate-500 */
+body.light-mode nav.fixed {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #d1fae5 !important;
+  box-shadow: 0 10px 40px rgba(6, 78, 59, 0.1) !important;
+}
+
+body.light-mode .placeholder-slate-600,
+body.light-mode .placeholder-slate-500 {
+  color: #94a3b8 !important; /* slate-400 */
 }
 
 body.light-mode .from-emerald-500.to-\[\#124227\] {
