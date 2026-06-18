@@ -42,6 +42,7 @@ export function clearAIInstance() {
 }
 
 const getApiUrl = () => {
+  // Always use the relative proxy if on the same origin (standard for this setup)
   return import.meta.env.VITE_API_URL || '';
 };
 
@@ -49,10 +50,14 @@ export async function chatWithGemini(message: string, history: { role: 'user'|'m
   const userKey = localStorage.getItem('user_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || "";
   const apiUrl = getApiUrl();
 
-  // Si on a l'URL de l'API (serveur), on l'utilise
-  if (apiUrl || !userKey) {
+  // In standard web mode, we prefer the server-side proxy
+  // We only use direct client mode if apiUrl is missing AND userKey is present
+  const useProxy = (typeof window !== 'undefined' && !window.location.protocol.startsWith('file')) || !userKey;
+
+  if (useProxy) {
     try {
-      const response = await fetch(`${apiUrl}/api/gemini/chat`, {
+      const endpoint = `${apiUrl}/api/gemini/chat`.replace(/\/+api/, '/api');
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, history, userKey })
@@ -60,7 +65,7 @@ export async function chatWithGemini(message: string, history: { role: 'user'|'m
 
       const data = await response.json();
       if (!response.ok) {
-        if (data.error && data.error.includes("Clé API Gemini manquante")) {
+        if (data.error && (data.error.includes("Clé API") || data.error.includes("Quota") || data.error.includes("Limite"))) {
             throw new Error(data.error);
         }
         throw new Error(data.error || 'Erreur lors de la communication de chat');
@@ -68,9 +73,8 @@ export async function chatWithGemini(message: string, history: { role: 'user'|'m
 
       return data.text || "Erreur lors de la génération de la réponse.";
     } catch(e: any) {
-      // Si l'erreur est liée au SSR/backend absent (Typique sur APK sans VITE_API_URL)
-      if (!userKey || (e.message && e.message.includes('Network'))) {
-        if (!userKey) throw e;
+      if (userKey && (e.message && (e.message.includes('Network') || e.message.includes('Failed to fetch')))) {
+        // Fallback to direct client mode if proxy fails (useful for local development or specific network issues)
       } else {
         throw e;
       }
@@ -78,7 +82,7 @@ export async function chatWithGemini(message: string, history: { role: 'user'|'m
   }
 
   // Mode APK - Client Direct (Nécessite la clé API)
-  const ai = new GoogleGenAI({ apiKey: userKey });
+  const ai = new GoogleGenAI(userKey);
   const contents = history.map((msg: any) => ({
     role: msg.role === 'model' ? 'model' : 'user',
     parts: [{ text: msg.text }]
@@ -86,7 +90,7 @@ export async function chatWithGemini(message: string, history: { role: 'user'|'m
   contents.push({ role: 'user', parts: [{ text: message }] });
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: contents
   });
 
@@ -97,9 +101,12 @@ export async function analyzePlantImage(images: { base64Image: string, mimeType:
   const userKey = localStorage.getItem('user_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || "";
   const apiUrl = getApiUrl();
 
-  if (apiUrl || !userKey) {
+  const useProxy = (typeof window !== 'undefined' && !window.location.protocol.startsWith('file')) || !userKey;
+
+  if (useProxy) {
     try {
-      const response = await fetch(`${apiUrl}/api/gemini/analyze`, {
+      const endpoint = `${apiUrl}/api/gemini/analyze`.replace(/\/+api/, '/api');
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ images, userKey })
@@ -107,16 +114,16 @@ export async function analyzePlantImage(images: { base64Image: string, mimeType:
 
       const data = await response.json();
       if (!response.ok) {
-         if (data.error && data.error.includes("Clé API Gemini manquante")) throw new Error(data.error);
-         if (data.error && data.error.includes("Quota API dépassé")) throw new Error(data.error);
-         if (data.error && data.error.includes("Limite de requêtes atteinte")) throw new Error(data.error);
+         if (data.error && (data.error.includes("Clé API") || data.error.includes("Quota") || data.error.includes("Limite"))) {
+           throw new Error(data.error);
+         }
          throw new Error(data.error || 'Erreur lors de l\'analyse');
       }
 
       return data;
     } catch(e: any) {
-      if (!userKey || (e.message && e.message.includes('Network'))) {
-        if (!userKey) throw e;
+      if (userKey && (e.message && (e.message.includes('Network') || e.message.includes('Failed to fetch')))) {
+        // Fallback to direct client
       } else {
         throw e;
       }
@@ -124,7 +131,7 @@ export async function analyzePlantImage(images: { base64Image: string, mimeType:
   }
 
   // Mode APK - Client Direct Analyse
-  const ai = new GoogleGenAI({ apiKey: userKey });
+  const ai = new GoogleGenAI(userKey);
   const parts: any[] = images.slice(0, 6).map((img: any) => ({
     inlineData: {
       data: img.base64Image,
@@ -139,7 +146,7 @@ export async function analyzePlantImage(images: { base64Image: string, mimeType:
   });
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3-flash-preview",
     contents: { parts: parts },
     config: {
       responseMimeType: "application/json",

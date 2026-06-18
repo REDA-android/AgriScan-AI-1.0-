@@ -5,7 +5,7 @@ import {
   TrendingUp, Calendar, Image as ImageIcon, Trash2, Globe, Cloud, Download, Upload,
   MapPin, User as UserIcon, Mail, Lock, AlertCircle, ArrowLeft, ChevronLeft,
   Book, Filter, Info, Maximize2, CheckSquare, Square, ChevronRight, Star, MessageSquare, Bot, Leaf, CheckCircle,
-  Sun, Moon
+  Sun, Moon, CloudLightning, CloudDrizzle, CloudRain
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -15,6 +15,7 @@ import { auth, db, handleFirestoreError, OperationType, signInWithGoogle, logout
 import { Capacitor } from '@capacitor/core';
 import { addDoc, collection, serverTimestamp, updateDoc, doc, deleteDoc, getDocFromServer, getDocs, setDoc, limit, query, where, orderBy, onSnapshot, getDocsFromServer, getDocsFromCache } from 'firebase/firestore';
 import { analyzePlantImage, PlantAnalysis, clearAIInstance } from './services/geminiService';
+import { initLiteRT, analyzeOffline } from './services/liteRTService';
 import { triggerHaptic } from './utils/haptics';
 
 import { 
@@ -23,6 +24,7 @@ import {
 import CameraView, { ProcessedImage } from './components/CameraView';
 import MapView from './components/MapView';
 import { ChatBot } from './components/ChatBot';
+import { ConfirmDialog } from './components/ConfirmDialog';
 // Hooks & Utils
 import { useUserProfile } from './hooks/useUserProfile';
 import { useObservations } from './hooks/useObservations';
@@ -142,6 +144,8 @@ interface WeatherInfo {
     condition: string;
     uvIndexMax?: number;
   }[];
+  extras?: any;
+  isFallback?: boolean;
 }
 
 function ObservationDetail({ observation, onClose, t, isArabic, isAdmin, onDelete, isDeleting, onRetry, onDownload, language }: { 
@@ -724,7 +728,7 @@ function AdminView({ t, isArabic, onObservationClick }: { t: any, isArabic: bool
                 <div className="flex gap-2">
                   <button 
                     onClick={() => handleUpdateStatus(user.id, 'approved')}
-                    className="flex-1 py-2 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full text-[10px] font-bold uppercase shadow-[0_0_15px_rgba(52,211,153,0.2)] tracking-widest hover:bg-emerald-700 transition-colors"
+                    className="flex-1 py-2 btn-glass-primary rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-500/30 transition-colors"
                   >
                     {t.approve}
                   </button>
@@ -1042,6 +1046,35 @@ function WeatherCard({
             </div>
           ))}
         </div>
+
+        {weather.extras && Object.keys(weather.extras).length > 0 && (
+          <div className="mt-4 pt-4 border-t border-white/5">
+            <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">Sources de données étendues</p>
+            <div className="flex flex-wrap gap-2">
+              {weather.extras.openweathermap && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-sky-500/10 rounded-lg border border-sky-500/20">
+                  <CloudLightning size={10} className="text-sky-400" />
+                  <span className="text-[9px] font-bold text-sky-400">OpenWeather</span>
+                  <span className="text-[9px] font-black text-sky-300 ml-1">{Math.round(weather.extras.openweathermap.main?.temp)}°C</span>
+                </div>
+              )}
+              {weather.extras.weatherapi && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                  <CloudDrizzle size={10} className="text-purple-400" />
+                  <span className="text-[9px] font-bold text-purple-400">WeatherAPI</span>
+                  <span className="text-[9px] font-black text-purple-300 ml-1">{Math.round(weather.extras.weatherapi.current?.temp_c)}°C</span>
+                </div>
+              )}
+              {weather.extras.visualcrossing && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-teal-500/10 rounded-lg border border-teal-500/20">
+                  <CloudRain size={10} className="text-teal-400" />
+                  <span className="text-[9px] font-bold text-teal-400">VisualCrossing</span>
+                  <span className="text-[9px] font-black text-teal-300 ml-1">{Math.round(weather.extras.visualcrossing.currentConditions?.temp)}°C</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -1163,6 +1196,28 @@ export default function App() {
   const [isGoogleConnecting, setIsGoogleConnecting] = useState(false);
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLiteRTReady, setIsLiteRTReady] = useState(false);
+  const [localModelPath, setLocalModelPath] = useState(() => localStorage.getItem('local_model_path') || '/assets/models/plant_classifier.tflite');
+
+  // Initialize LiteRT
+  useEffect(() => {
+    const warmup = async () => {
+      setIsLiteRTReady(false);
+      try {
+        const engine = await initLiteRT(localModelPath);
+        if (engine) setIsLiteRTReady(true);
+      } catch (e) {
+        console.warn("Offline AI Engine initialization failed", e);
+      }
+    };
+    warmup();
+  }, [localModelPath]);
+
+  const updateLocalModel = (path: string) => {
+    setLocalModelPath(path);
+    localStorage.setItem('local_model_path', path);
+    notifyUser(`Modèle local mis à jour : ${path.split('/').pop()}`, "info");
+  };
 
   // Notification State
   interface AppNotification {
@@ -1732,10 +1787,16 @@ export default function App() {
           airQuality: "Bonne",
           uvIndex: weatherData.current?.uv_index || 0
         },
-        forecast: forecastArray
+        forecast: forecastArray,
+        extras: weatherData.extras,
+        isFallback: weatherData.isFallback
       };
 
       setWeather(finalData);
+
+      if (weatherData.isFallback) {
+         alert("La source météo principale a échoué. Basculement automatique vers les sources de secours.");
+      }
     } catch (error) {
       console.error("Failed to fetch weather", error);
     } finally {
@@ -1748,10 +1809,8 @@ export default function App() {
       const fetchLocationAndWeather = async () => {
         try {
           const { Geolocation } = await import('@capacitor/geolocation');
-          // Important: Don't request permissions right away if this fires on startup 
-          // to avoid annoying the user until explicitly needed, 
-          // or use Geolocation API without assuming it works immediately if denied.
-          const pos = await Geolocation.getCurrentPosition({ timeout: 30000, enableHighAccuracy: true });
+          // Try with low accuracy and cached first to avoid startup prompt/delays on Android if it's struggling
+          const pos = await Geolocation.getCurrentPosition({ timeout: 10000, enableHighAccuracy: false, maximumAge: 300000 });
           fetchWeather(pos.coords.latitude, pos.coords.longitude);
         } catch (err) {
           console.warn("Geolocation failed/denied, defaulting to Paris", err);
@@ -2328,10 +2387,30 @@ export default function App() {
     // 1.5 Handle Offline Mode
     if (!isOnline) {
       const offlineId = crypto.randomUUID();
+      let offlineAnalysisResult = null;
+      
+      // Try local analysis if possible
+      if (isLiteRTReady) {
+        try {
+          const img = new Image();
+          img.src = tempThumbUrl;
+          await new Promise((resolve) => { img.onload = resolve; });
+          offlineAnalysisResult = await analyzeOffline(img, localModelPath);
+          triggerHaptic('success');
+        } catch (e) {
+          console.error("Local analysis error", e);
+        }
+      }
+
       const offlineObs: OfflineObservation = {
         id: offlineId,
         userId: user.uid,
-        metadata: { ...metadata, variety: metadata.variety || "Captur Hors-ligne" },
+        metadata: { 
+          ...metadata, 
+          variety: offlineAnalysisResult?.variety || metadata.variety || "Captur Hors-ligne",
+          culture: offlineAnalysisResult?.culture || metadata.culture || "En attente...",
+          offlineAnalysis: offlineAnalysisResult
+        },
         fileData: tempThumbUrl, // Store thumb for preview
         fileType: storageImages[0].mimeType,
         capturedAt: new Date().toISOString(),
@@ -2340,7 +2419,11 @@ export default function App() {
       await saveOfflineObservation(offlineObs);
       setOfflineObservations(prev => [...prev, offlineObs]);
       setBackgroundTasks(prev => prev.filter(t => t.id !== uploadTaskId && t.id !== analysisTaskId));
-      alert("Observation enregistrée localement dans la base de données interne.");
+      
+      const msg = offlineAnalysisResult 
+        ? `Analyse locale réussie : ${offlineAnalysisResult.culture}. Enregistré hors-ligne.`
+        : "Observation enregistrée localement. L'IA l'analysera à la reconnexion.";
+      alert(msg);
       return;
     }
 
@@ -2492,17 +2575,71 @@ export default function App() {
     }
   };
 
+  const [deleteConfirmState, setDeleteConfirmState] = useState<{ isOpen: boolean; id: string | null; isBulk: boolean }>({
+    isOpen: false,
+    id: null,
+    isBulk: false
+  });
+  
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
 
-  const handleDelete = async (id: string) => {
-    if (isDeleting === id) {
+  const requestDelete = (id: string) => {
+    setDeleteConfirmState({ isOpen: true, id, isBulk: false });
+    triggerHaptic('medium');
+  };
+
+  const requestBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setDeleteConfirmState({ isOpen: true, id: null, isBulk: true });
+    triggerHaptic('medium');
+  };
+
+  const executeDelete = async () => {
+    const { id, isBulk } = deleteConfirmState;
+    setDeleteConfirmState({ isOpen: false, id: null, isBulk: false });
+
+    if (isBulk) {
+      if (selectedIds.length === 0) return;
+      setIsDeletingBulk(true);
+      try {
+        const { writeBatch } = await import('firebase/firestore');
+        const batch = writeBatch(db);
+        
+        for (const selId of selectedIds) {
+          if (isAdmin) {
+            batch.delete(doc(db, 'observations', selId));
+          } else {
+            batch.update(doc(db, 'observations', selId), { 
+              isDeletedByCreator: true,
+              deletedAt: serverTimestamp()
+            });
+          }
+        }
+        
+        await batch.commit();
+        setSelectedIds([]);
+        setIsSelectionMode(false);
+        setIsDeletingBulk(false);
+        triggerHaptic('success');
+      } catch (e) {
+        handleFirestoreError(e, isAdmin ? OperationType.DELETE : OperationType.UPDATE, 'observations');
+        setIsDeletingBulk(false);
+        triggerHaptic('error');
+      }
+    } else if (id) {
+      if (id.startsWith('temp_') || offlineObservations.some(o => o.id === id)) {
+        await deleteOfflineObservation(id);
+        setOfflineObservations(prev => prev.filter(o => o.id !== id));
+        triggerHaptic('success');
+        return;
+      }
+      
+      setIsDeleting(id);
       try {
         if (isAdmin) {
-          // Admin performs hard delete
           await deleteDoc(doc(db, 'observations', id));
         } else {
-          // User performs soft delete (hidden from users, visible to admin)
           await updateDoc(doc(db, 'observations', id), { 
             isDeletedByCreator: true,
             deletedAt: serverTimestamp()
@@ -2517,50 +2654,21 @@ export default function App() {
           setSelectedObservation(null);
         }
         setIsDeleting(null);
-        triggerHaptic('heavy');
+        triggerHaptic('success');
       } catch (e) {
         handleFirestoreError(e, isAdmin ? OperationType.DELETE : OperationType.UPDATE, 'observations');
         setIsDeleting(null);
         triggerHaptic('error');
       }
-    } else {
-      setIsDeleting(id);
-      triggerHaptic('medium');
-      // Auto-reset after 3 seconds if not confirmed
-      setTimeout(() => setIsDeleting(prev => prev === id ? null : prev), 3000);
     }
   };
 
+  const handleDelete = async (id: string) => {
+    requestDelete(id);
+  };
+
   const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    if (!isDeletingBulk) {
-      setIsDeletingBulk(true);
-      return;
-    }
-    
-    try {
-      const { writeBatch } = await import('firebase/firestore');
-      const batch = writeBatch(db);
-      
-      for (const id of selectedIds) {
-        if (isAdmin) {
-          batch.delete(doc(db, 'observations', id));
-        } else {
-          batch.update(doc(db, 'observations', id), { 
-            isDeletedByCreator: true,
-            deletedAt: serverTimestamp()
-          });
-        }
-      }
-      
-      await batch.commit();
-      setSelectedIds([]);
-      setIsSelectionMode(false);
-      setIsDeletingBulk(false);
-    } catch (e) {
-      handleFirestoreError(e, isAdmin ? OperationType.DELETE : OperationType.UPDATE, 'observations');
-      setIsDeletingBulk(false);
-    }
+    requestBulkDelete();
   };
 
   const handleRetryAnalysis = async (id: string) => {
@@ -3096,7 +3204,7 @@ export default function App() {
               {!userData && (
                 <button 
                   onClick={handleRequestAccess}
-                  className="w-full py-4 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-black hover:opacity-90 shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-all active:scale-95"
+                  className="w-full py-4 btn-glass-primary rounded-full font-black hover:opacity-90 transition-all active:scale-95"
                 >
                   {t.requestAccess}
                 </button>
@@ -3321,13 +3429,62 @@ export default function App() {
             )}
 
             {!analysis && (
-              <CameraView 
-                onCapture={handleCapture} 
-                isOnline={isOnline} 
-                onOpenMapPicker={() => setIsMapPickerOpen(true)}
-                manualLocation={manualLocation}
-                offlineQueueCount={offlineObservations.length}
-              />
+              <div className="space-y-4">
+                <CameraView 
+                  onCapture={handleCapture} 
+                  isOnline={isOnline} 
+                  onOpenMapPicker={() => setIsMapPickerOpen(true)}
+                  manualLocation={manualLocation}
+                  offlineQueueCount={offlineObservations.length}
+                />
+                
+                {/* Edge AI Settings Section */}
+                <div className="p-4 bg-slate-900/40 rounded-2xl border border-white/5 backdrop-blur-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${isLiteRTReady ? 'bg-emerald-500 animate-pulse' : 'bg-slate-600'}`} />
+                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Configuration Edge AI</h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-400/70">LiteRT v0.10.0</span>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                      {[
+                        { name: 'CropNet (Maladies)', path: '/assets/models/plant_classifier.tflite' },
+                        { name: 'AIy Plants', path: '/assets/models/aiy_plants.tflite' },
+                        { name: 'MobileNet V3', path: '/assets/models/mobilenet_v3.tflite' },
+                        { name: 'EfficientNet', path: '/assets/models/efficientnet_lite.tflite' }
+                      ].map((m) => (
+                        <button
+                          key={m.path}
+                          onClick={() => updateLocalModel(m.path)}
+                          className={`flex-none px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+                            localModelPath === m.path 
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]' 
+                            : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'
+                          }`}
+                        >
+                          {m.name}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="relative">
+                      <input 
+                        type="text"
+                        value={localModelPath}
+                        onChange={(e) => updateLocalModel(e.target.value)}
+                        placeholder="Chemin du modèle personnalisé..."
+                        className="w-full bg-[#0d120f] border border-white/5 rounded-xl px-3 py-2 text-[10px] font-mono text-emerald-400 focus:outline-none focus:border-emerald-500/30"
+                      />
+                      <p className="mt-1 text-[9px] text-slate-500 italic pl-1">
+                        Dossier racine : /public/assets/models/
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {analysis && !isAnalyzing && (
@@ -3520,7 +3677,7 @@ export default function App() {
 
                   <button 
                     onClick={handleSaveNotes}
-                    className="w-full py-3 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-bold hover:opacity-90 shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 btn-glass-primary rounded-full font-bold hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
                     <Save size={18} />
                     Enregistrer l'observation
@@ -3537,10 +3694,10 @@ export default function App() {
                       </button>
                       <button 
                         onClick={() => handleDelete(editingId)}
-                        className={`py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border ${isDeleting === editingId ? 'bg-red-600 text-white border-red-700' : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'}`}
+                        className={`py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20`}
                       >
                         <Trash2 size={18} />
-                        {isDeleting === editingId ? 'Confirmer ?' : 'Supprimer'}
+                        Supprimer
                       </button>
                     </div>
                   )}
@@ -3586,16 +3743,9 @@ export default function App() {
                       {(isAdmin || obs.userId === user?.uid) && (
                         <button 
                           onClick={() => handleDelete(obs.id)}
-                          className={`p-2 rounded-lg transition-all flex items-center gap-1 ${isDeleting === obs.id ? 'bg-red-600 text-white' : 'text-slate-300 hover:text-red-400 hover:bg-red-500/10'}`}
+                          className={`p-2 rounded-lg transition-all flex items-center gap-1 text-slate-300 hover:text-red-400 hover:bg-red-500/10`}
                         >
-                          {isDeleting === obs.id ? (
-                            <>
-                              <CheckSquare size={18} />
-                              <span className="text-[10px] font-bold uppercase">Confirmer ?</span>
-                            </>
-                          ) : (
-                            <Trash2 size={18} />
-                          )}
+                          <Trash2 size={18} />
                         </button>
                       )}
                     </div>
@@ -3679,12 +3829,21 @@ export default function App() {
                   onClick={async () => {
                     try {
                       const { Geolocation } = await import('@capacitor/geolocation');
-                      const permissions = await Geolocation.requestPermissions();
-                      if (permissions.location === 'denied') {
-                        alert("Permission de localisation refusée. Activez-la dans les paramètres de votre appareil.");
-                        return;
+                      let check = await Geolocation.checkPermissions();
+                      if (check.location !== 'granted') {
+                        check = await Geolocation.requestPermissions();
+                        if (check.location === 'denied') {
+                          alert("Permission de localisation refusée. Activez-la dans les paramètres de votre appareil.");
+                          return;
+                        }
                       }
-                      const pos = await Geolocation.getCurrentPosition({ timeout: 30000, enableHighAccuracy: true });
+                      
+                      let pos;
+                      try {
+                        pos = await Geolocation.getCurrentPosition({ timeout: 10000, enableHighAccuracy: true });
+                      } catch (e) {
+                        pos = await Geolocation.getCurrentPosition({ timeout: 10000, enableHighAccuracy: false, maximumAge: 300000 });
+                      }
                       fetchWeather(pos.coords.latitude, pos.coords.longitude);
                     } catch (err: any) {
                       alert(`Erreur de géolocalisation: ${err.message}`); 
@@ -3771,10 +3930,10 @@ export default function App() {
                         <button 
                           onClick={handleBulkDelete}
                           disabled={selectedIds.length === 0}
-                          className={`p-2 rounded-lg disabled:opacity-50 flex items-center gap-1 text-xs font-bold transition-all ${isDeletingBulk ? 'bg-red-600 text-white' : 'bg-red-500/10 text-red-400'}`}
+                          className={`p-2 rounded-lg disabled:opacity-50 flex items-center gap-1 text-xs font-bold transition-all bg-red-500/10 text-red-400 hover:bg-red-500/20`}
                         >
                           <Trash2 size={16} />
-                          {isDeletingBulk ? 'Confirmer ?' : `(${selectedIds.length})`}
+                          ({selectedIds.length})
                         </button>
                         <button 
                           onClick={() => { setIsSelectionMode(false); setSelectedIds([]); }}
@@ -4001,7 +4160,7 @@ export default function App() {
                     {obs.isOffline ? (
                       <div className="absolute top-2 right-2 flex gap-1">
                         <button 
-                          onClick={(e) => { e.stopPropagation(); if(confirm("Supprimer cette observation locale ?")) deleteOfflineObservation(obs.id).then(() => setOfflineObservations(prev => prev.filter(o => o.id !== obs.id))); }}
+                          onClick={(e) => { e.stopPropagation(); requestDelete(obs.id); }}
                           className="bg-red-500/100/90 backdrop-blur-sm p-1.5 rounded-full shadow-none hover:bg-red-600 transition-colors"
                         >
                           <Trash2 size={12} className="text-white" />
@@ -4101,7 +4260,7 @@ export default function App() {
             />
             <button 
               onClick={() => handleDownloadImage(selectedImage, `agroscan_full_${Date.now()}.jpg`)}
-              className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-bold shadow-[0_0_15px_rgba(52,211,153,0.2)] hover:opacity-90 transition-all active:scale-95"
+              className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2 px-6 py-3 btn-glass-primary rounded-full font-bold hover:opacity-90 transition-all active:scale-95"
             >
               <Download size={20} />
               Télécharger l'image
@@ -4144,7 +4303,7 @@ export default function App() {
                 <button 
                   onClick={() => setIsMapPickerOpen(false)}
                   disabled={!manualLocation}
-                  className="w-full py-3 bg-gradient-to-r from-emerald-400 to-[#124227] text-[#0d120f] rounded-full font-bold hover:opacity-90 shadow-[0_0_15px_rgba(52,211,153,0.2)] transition-colors disabled:opacity-50"
+                  className="w-full py-3 btn-glass-primary rounded-full font-bold hover:opacity-90 transition-colors disabled:opacity-50"
                 >
                   Confirmer la position
                 </button>
@@ -4154,10 +4313,18 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      <ConfirmDialog
+        isOpen={deleteConfirmState.isOpen}
+        title={deleteConfirmState.isBulk ? "Supprimer la sélection" : "Supprimer l'observation"}
+        message={deleteConfirmState.isBulk ? `Êtes-vous sûr de vouloir supprimer ces ${selectedIds.length} observations ? Cette action est irréversible.` : "Êtes-vous sûr de vouloir supprimer cette observation ? Cette action est irréversible."}
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteConfirmState({ isOpen: false, id: null, isBulk: false })}
+      />
+
       <ChatBot />
 
       {/* Bottom Navigation - Liquid Glass Style */}
-      <nav className="fixed bottom-6 left-4 right-4 max-w-sm mx-auto bg-white/5 backdrop-blur-3xl border border-white/10 p-2 rounded-[2.5rem] flex justify-around items-center z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)]">
+      <nav className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 right-4 max-w-sm xl:max-w-md mx-auto bg-white/5 backdrop-blur-3xl border border-white/10 p-2 rounded-[2.5rem] flex justify-around items-center z-50 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.2)]">
         <div className="absolute -top-3 right-6 flex items-center gap-1.5 bg-[#161c18] border border-white/10 rounded-full px-2 py-0.5 shadow-lg pointer-events-none">
           <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? (offlineObservations.length === 0 ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse') : 'bg-red-500'}`} />
           <span className="text-[7px] font-bold uppercase tracking-wider text-slate-400">
@@ -4167,22 +4334,24 @@ export default function App() {
         
         <button 
           onClick={() => setActiveTab('map')}
-          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'map' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`relative group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'map' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
         >
           <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'map' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
             <MapIcon size={18} strokeWidth={activeTab === 'map' ? 2.5 : 2} />
           </div>
           <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'map' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.map}</span>
+          {activeTab === 'map' && <div className="absolute -bottom-2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />}
         </button>
 
         <button 
           onClick={() => setActiveTab('weather')}
-          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'weather' ? 'text-blue-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`relative group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'weather' ? 'text-blue-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
         >
           <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'weather' ? 'btn-glass shadow-[0_0_15px_rgba(59,130,246,0.3)] text-blue-400 border-blue-400/30' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
             <Cloud size={18} strokeWidth={activeTab === 'weather' ? 2.5 : 2} />
           </div>
           <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'weather' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.weather}</span>
+          {activeTab === 'weather' && <div className="absolute -bottom-2 w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(59,130,246,1)] animate-pulse" />}
         </button>
 
         <button 
@@ -4195,27 +4364,30 @@ export default function App() {
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2">
             <span className={`text-[8px] font-black uppercase tracking-widest transition-all duration-300 ${activeTab === 'scan' ? 'text-emerald-400 opacity-100' : 'text-slate-400 opacity-0'}`}>{t.scan}</span>
           </div>
+          {activeTab === 'scan' && <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />}
         </button>
 
         <button 
           onClick={() => setActiveTab('catalog')}
-          className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'catalog' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
+          className={`relative group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'catalog' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
         >
           <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'catalog' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
             <Book size={18} strokeWidth={activeTab === 'catalog' ? 2.5 : 2} />
           </div>
           <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'catalog' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.catalog}</span>
+          {activeTab === 'catalog' && <div className="absolute -bottom-2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />}
         </button>
 
         {isAdmin && (
           <button 
             onClick={() => setActiveTab('admin')}
-            className={`group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'admin' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`relative group flex flex-col items-center gap-1 transition-all duration-300 ${activeTab === 'admin' ? 'text-emerald-400 scale-105' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <div className={`p-2 rounded-2xl transition-all duration-300 ${activeTab === 'admin' ? 'btn-glass-primary shadow-[0_0_15px_rgba(52,211,153,0.3)]' : 'group-hover:btn-glass btn-glass bg-transparent border-transparent shadow-none'}`}>
               <RefreshCw size={18} strokeWidth={activeTab === 'admin' ? 2.5 : 2} />
             </div>
             <span className={`text-[8px] font-black uppercase tracking-widest transition-opacity ${activeTab === 'admin' ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>{t.admin}</span>
+            {activeTab === 'admin' && <div className="absolute -bottom-2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />}
           </button>
         )}
       </nav>

@@ -71,7 +71,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(userId) && 
                       isValidUser(request.resource.data) && 
                       request.resource.data.role == 'viewer' &&
-                      (request.resource.data.accessStatus == 'pending' || (request.auth.provider == 'anonymous' && request.resource.data.accessStatus == 'approved'));
+                      (request.resource.data.accessStatus == 'pending' || (request.auth.token.firebase.sign_in_provider == 'anonymous' && request.resource.data.accessStatus == 'approved'));
       // Admins can update anything, users can only update their own profile if it doesn't change role or status
       allow update: if isAuthenticated() && 
                       (isAdmin() || 

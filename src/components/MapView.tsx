@@ -68,7 +68,18 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
     const fetchLocation = async () => {
       try {
         const { Geolocation } = await import('@capacitor/geolocation');
-        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 30000 });
+        let check = await Geolocation.checkPermissions();
+        if (check.location !== 'granted') {
+          check = await Geolocation.requestPermissions();
+        }
+
+        let position;
+        try {
+          position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+        } catch (error) {
+          position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+        }
+        
         setMapCenter([position.coords.latitude, position.coords.longitude]);
         setMapZoom(12);
       } catch (error) {
