@@ -12,21 +12,43 @@ export async function initLiteRT(modelPath: string = "/assets/models/plant_class
   console.log(`[LiteRT] Initializing engine with model: ${modelPath}`);
 
   try {
-    // 1. Verify file exists before MediaPipe tries to load it (prevents silent failures)
+    // 1. Verify file exists and is NOT a HTML/SPA redirection page before MediaPipe loads it
     try {
-      const response = await fetch(modelPath, { method: 'HEAD' });
+      const response = await fetch(modelPath);
       if (!response.ok) {
-        throw new Error(`Le fichier modèle est introuvable à l'emplacement: ${modelPath}. Veuillez vous assurer que le fichier 'plant_classifier.tflite' est présent dans le dossier 'public/assets/models/'.`);
+        throw new Error(`Le fichier modèle n'a pas pu être récupéré (Status: ${response.status}).`);
+      }
+      
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('text/html')) {
+        throw new Error(`Fichier modèle manquant ou invalide : le serveur a renvoyé une page HTML (redirection 404) au lieu du fichier binaire '.tflite'.`);
+      }
+
+      // Read first few bytes to check for HTML tag headers
+      const reader = response.body?.getReader();
+      if (reader) {
+        const { value } = await reader.read();
+        reader.cancel(); // Immediately release resources
+        if (value) {
+          const textHeader = new TextDecoder().decode(value.slice(0, 100)).trim();
+          if (textHeader.startsWith('<!DOCTYPE') || textHeader.startsWith('<html') || textHeader.includes('<head')) {
+            throw new Error(`Fichier modèle manquant : redirection d'URL active. Le fichier '${modelPath.split('/').pop()}' est manquant dans '/public/assets/models/'.`);
+          }
+        }
       }
     } catch (e: any) {
-      if (e.message.includes('introuvable')) throw e;
-      console.warn(`[LiteRT] Could not pre-verify file ${modelPath}, attempting MediaPipe load regardless.`);
+      console.warn(`[LiteRT] Model verification failed:`, e.message);
+      throw new Error(e.message || `Assurez-vous d'avoir placé le modèle '${modelPath.split('/').pop()}' dans le dossier 'public/assets/models/'.`);
     }
 
     // Force cleanup of old instance if model changed
     if (imageClassifier) {
       console.log(`[LiteRT] Closing previous instance...`);
-      imageClassifier.close();
+      try {
+        imageClassifier.close();
+      } catch (err) {
+        console.warn(`[LiteRT] Failed to close old stance gracefully`, err);
+      }
       imageClassifier = null;
     }
 
@@ -34,21 +56,36 @@ export async function initLiteRT(modelPath: string = "/assets/models/plant_class
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
     );
     
-    imageClassifier = await ImageClassifier.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: modelPath,
-        delegate: "GPU"
-      },
-      runningMode: "IMAGE",
-      maxResults: 5,
-      scoreThreshold: 0.35 // Slightly lower threshold for better offline results
-    });
+    // Attempt initialization with CPU delegate first or GPU fallback for ultimate stability.
+    // WebAssembly memory can easily crash on mobile/iframe embedded environments if GPU WebGL context fails.
+    try {
+      console.log(`[LiteRT] Creating image classifier with CPU delegate for standard memory footprint...`);
+      imageClassifier = await ImageClassifier.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: modelPath,
+          delegate: "CPU"
+        },
+        runningMode: "IMAGE",
+        maxResults: 5,
+        scoreThreshold: 0.35
+      });
+    } catch (cpuError: any) {
+      console.warn(`[LiteRT] CPU creation error, trying auto delegate...`, cpuError);
+      imageClassifier = await ImageClassifier.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: modelPath
+        },
+        runningMode: "IMAGE",
+        maxResults: 5,
+        scoreThreshold: 0.35
+      });
+    }
 
     currentModelPath = modelPath;
     console.log(`[LiteRT] Engine successfully initialized with ${modelPath}`);
     return imageClassifier;
-  } catch (error) {
-    console.error("[LiteRT] Engine initialization failed:", error);
+  } catch (error: any) {
+    console.error("[LiteRT] Engine initialization failed:", error.message || error);
     return null;
   }
 }

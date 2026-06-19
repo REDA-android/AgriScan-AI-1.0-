@@ -3460,10 +3460,12 @@ export default function App() {
                     } backdrop-blur-xl group`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${isLiteRTReady ? 'bg-emerald-500 animate-pulse' : 'bg-slate-600'}`} />
+                      <div className={`w-2 h-2 rounded-full ${isLiteRTReady ? 'bg-emerald-500 animate-pulse' : (isOnline ? 'bg-slate-500' : 'bg-amber-500 animate-pulse')}`} />
                       <div className="text-left">
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-emerald-400 transition-colors">Lab : IA Locale (Mode Offline)</h3>
-                        <p className="text-[9px] text-slate-500 font-medium">Moteur LiteRT v0.10.0</p>
+                        <p className="text-[9px] text-slate-500 font-medium">
+                          {isLiteRTReady ? 'Moteur LiteRT prêt • Modèle chargé' : 'Modèle local non détecté (Mode Cloud actif)'}
+                        </p>
                       </div>
                     </div>
                     <ChevronDown size={14} className={`text-slate-500 transition-transform duration-300 ${showEdgeAISettings ? 'rotate-180' : ''}`} />
@@ -3478,6 +3480,18 @@ export default function App() {
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                       >
                         <div className="mt-2 p-4 bg-slate-900/60 rounded-xl border border-white/5 space-y-4">
+                          {!isLiteRTReady && (
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[10px] text-amber-600 dark:text-amber-400 space-y-1">
+                              <p className="font-bold flex items-center gap-1.5">
+                                <Info size={12} className="flex-shrink-0" />
+                                Modèle local non configuré (Facultatif)
+                              </p>
+                              <p className="opacity-95 leading-relaxed font-normal">
+                                Pour analyser vos cultures en plein champ sans aucune connexion internet, veuillez placer le fichier modèle <span className="font-mono bg-amber-500/5 px-1 py-0.5 rounded font-semibold text-emerald-600 dark:text-emerald-400">plant_classifier.tflite</span> dans le dossier <span className="font-mono bg-amber-500/5 px-1 py-0.5 rounded font-semibold text-emerald-600 dark:text-emerald-400">/public/assets/models/</span>. Lorsque l'appareil est connecté à internet, AgriScan utilise automatiquement les modèles distants sécurisés sous Gemini.
+                              </p>
+                            </div>
+                          )}
+
                           <div className="space-y-2">
                             <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block ml-1">Choix du modèle (4 experts)</label>
                             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">

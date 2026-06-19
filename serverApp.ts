@@ -3,9 +3,34 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const app = express();
 
-// Increase payload limit to support large images
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+// Middleware to normalize Vercel serverless function request routing URL.
+// When Vercel rewrites "/api/(.*)" to "/api/index.ts", Express receives "/gemini/chat" instead of "/api/gemini/chat".
+// We prefix the routing with "/api" to ensure it matches our route handlers perfectly.
+app.use((req: any, res: any, next: any) => {
+  if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/_next') && !req.url.startsWith('/static')) {
+    const originalUrl = req.url;
+    req.url = '/api' + (originalUrl.startsWith('/') ? '' : '/') + originalUrl;
+    console.log(`[Vercel Route Rewrite] Rewrote ${originalUrl} -> ${req.url}`);
+  }
+  next();
+});
+
+// Custom body-parsers to avoid streaming conflicts with Vercel serverless platform
+app.use((req: any, res: any, next: any) => {
+  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+    next();
+  } else {
+    express.json({ limit: "50mb" })(req, res, next);
+  }
+});
+
+app.use((req: any, res: any, next: any) => {
+  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+    next();
+  } else {
+    express.urlencoded({ limit: "50mb", extended: true })(req, res, next);
+  }
+});
 
 // Helper to init AI
 const getAI = (apiKey?: string) => {
@@ -16,7 +41,14 @@ const getAI = (apiKey?: string) => {
   
   // Fallback if we really want to prevent a crash
   const resolvedKey = key.trim() || "AIzaSyFakeKey_NoCrashOnInstantiation";
-  return new GoogleGenAI(resolvedKey);
+  return new GoogleGenAI({
+    apiKey: resolvedKey,
+    httpOptions: {
+      headers: {
+        'User-Agent': 'aistudio-build',
+      }
+    }
+  });
 };
 
 const handleAIError = (error: any, res: any) => {
