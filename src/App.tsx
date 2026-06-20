@@ -3496,10 +3496,10 @@ export default function App() {
                             <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block ml-1">Choix du modèle (4 experts)</label>
                             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                               {[
-                                { name: 'CropNet', desc: 'Maladies', path: '/assets/models/plant_classifier.tflite' },
-                                { name: 'AIy Plant', desc: '+2000 espèces', path: '/assets/models/aiy_plants.tflite' },
-                                { name: 'MobileNet', desc: 'Vitesse', path: '/assets/models/mobilenet_v3.tflite' },
-                                { name: 'EfficientNet', desc: 'Précision', path: '/assets/models/efficientnet_lite.tflite' }
+                                { name: 'MobileNetV3-Small', desc: 'BATTERIE', path: '/assets/models/plant_classifier.tflite' },
+                                { name: 'MobileNetV3-Large', desc: 'ÉQUILIBRE', path: '/assets/models/aiy_plants.tflite' },
+                                { name: 'MobileNetV2', desc: 'STABILITÉ', path: '/assets/models/mobilenet_v3.tflite' },
+                                { name: 'EfficientNet Lite0', desc: 'PRÉCISION', path: '/assets/models/efficientnet_lite.tflite' }
                               ].map((m) => (
                                 <button
                                   key={m.path}
