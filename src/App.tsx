@@ -1867,7 +1867,7 @@ export default function App() {
       let responseTextStr = "";
       let groundingChunksData = null;
 
-      if (apiUrl || !userKey) {
+      if (!userKey) {
         const proxyRes = await fetch(`${apiUrl}/api/gemini/generateContent`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1883,6 +1883,18 @@ export default function App() {
             `Erreur de connexion au serveur chat: ${err.message || "Serveur injoignable"}`,
           );
         });
+
+        const contentType = proxyRes.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await proxyRes.text();
+          console.error(
+            "[Chat] Unexpected response from server:",
+            text.substring(0, 100),
+          );
+          throw new Error(
+            "Le serveur a renvoyé une réponse HTML au lieu de JSON. Si vous êtes sur Vercel, assurez-vous que les fonctions du serveur API sont déployées, ou configurez votre propre Clé API Gemini dans les Paramètres de l'application pour utiliser le mode direct sans serveur.",
+          );
+        }
 
         const responseData = await proxyRes.json().catch(() => null);
 

@@ -57,11 +57,10 @@ export async function chatWithGemini(
     "";
   const apiUrl = getApiUrl();
 
-  // In standard web mode, we prefer the server-side proxy
-  const useProxy =
-    (typeof window !== "undefined" &&
-      !window.location.protocol.startsWith("file")) ||
-    !userKey;
+  // If the user has an API key, we call Gemini directly from the client.
+  // This is highly recommended for static hostings (like Vercel) where the backend is not
+  // deployed or runs in serverless, avoiding proxy issues.
+  const useProxy = !userKey;
 
   if (useProxy) {
     try {
@@ -80,7 +79,7 @@ export async function chatWithGemini(
           text.substring(0, 100),
         );
         throw new Error(
-          "Le serveur a renvoyé une réponse invalide (HTML au lieu de JSON).",
+          "Le serveur de chat a renvoyé une réponse HTML au lieu de JSON. Si vous êtes sur Vercel, assurez-vous que les fonctions du serveur API sont déployées, ou configurez votre propre Clé API Gemini dans les Paramètres pour utiliser le mode direct.",
         );
       }
 
@@ -139,10 +138,10 @@ export async function analyzePlantImage(
     "";
   const apiUrl = getApiUrl();
 
-  const useProxy =
-    (typeof window !== "undefined" &&
-      !window.location.protocol.startsWith("file")) ||
-    !userKey;
+  // If the user has an API key, we call Gemini directly from the client.
+  // This is highly recommended for static hostings (like Vercel) where the backend is not
+  // deployed or runs in serverless, avoiding proxy issues.
+  const useProxy = !userKey;
 
   if (useProxy) {
     try {
@@ -161,7 +160,7 @@ export async function analyzePlantImage(
           text.substring(0, 100),
         );
         throw new Error(
-          "Le serveur a renvoyé une réponse invalide (HTML au lieu de JSON).",
+          "Le serveur d'analyse a renvoyé une réponse HTML au lieu de JSON. Si vous êtes sur Vercel, assurez-vous que les fonctions du serveur API sont déployées, ou configurez votre propre Clé API Gemini dans les Paramètres pour utiliser le mode direct.",
         );
       }
 
