@@ -3,15 +3,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const app = express();
 
-// Middleware to normalize Vercel serverless function request routing URL.
-// When Vercel rewrites "/api/(.*)" to "/api/index.ts", Express receives "/gemini/chat" instead of "/api/gemini/chat".
-// We prefix the routing with "/api" to ensure it matches our route handlers perfectly.
+// For Vercel Serverless compatibility, all route handlers are mounted on both "/api/..." and "/..." prefixes.
+// This completely avoids having to rewrite the global req.url, ensuring 100% compatibility with local Vite environments.
+
 app.use((req: any, res: any, next: any) => {
-  if (req.url && !req.url.startsWith('/api') && !req.url.startsWith('/_next') && !req.url.startsWith('/static')) {
-    const originalUrl = req.url;
-    req.url = '/api' + (originalUrl.startsWith('/') ? '' : '/') + originalUrl;
-    console.log(`[Vercel Route Rewrite] Rewrote ${originalUrl} -> ${req.url}`);
-  }
+  console.log(`[Server] Method: ${req.method} | URL: ${req.url} | Path: ${req.path}`);
   next();
 });
 
@@ -72,7 +68,7 @@ const handleAIError = (error: any, res: any) => {
   res.status(status).json({ error: message });
 };
 
-app.post("/api/gemini/generateContent", async (req, res) => {
+app.post(["/api/gemini/generateContent", "/gemini/generateContent"], async (req, res) => {
   const { model, contents, config, userKey } = req.body;
 
   const apiKey = userKey || process.env.GEMINI_API_KEY;
@@ -82,16 +78,18 @@ app.post("/api/gemini/generateContent", async (req, res) => {
 
   try {
     console.log(`[AI] Generating content with model: ${req.body.model || 'default'}`);
-    const ai = getAI(apiKey);
-    const response = await ai.models.generateContent({
-      model: req.body.model || "gemini-3-flash-preview",
+    const genAI = getAI(apiKey);
+    const modelInstance = genAI.getGenerativeModel({ model: req.body.model || "gemini-1.5-flash" });
+    
+    const result = await modelInstance.generateContent({
       contents: req.body.contents,
-      config: req.body.config
+      generationConfig: req.body.config
     });
 
+    const response = await result.response;
     console.log(`[AI] Generation successful`);
     res.json({ 
-      text: response.text, 
+      text: response.text(), 
       candidates: (response as any).candidates 
     });
   } catch (error: any) {
@@ -100,7 +98,7 @@ app.post("/api/gemini/generateContent", async (req, res) => {
   }
 });
 
-app.post("/api/gemini/analyze", async (req, res) => {
+app.post(["/api/gemini/analyze", "/gemini/analyze"], async (req, res) => {
   const { images, userKey } = req.body;
   
   const apiKey = userKey || process.env.GEMINI_API_KEY;
@@ -110,32 +108,10 @@ app.post("/api/gemini/analyze", async (req, res) => {
 
   try {
     console.log(`[AI] Analyzing ${images?.length || 0} images`);
-    const ai = getAI(apiKey);
-    const parts: any[] = images.slice(0, 6).map((img: any) => ({
-      inlineData: {
-        data: img.base64Image,
-        mimeType: img.mimeType || 'image/jpeg',
-      },
-    }));
-
-    parts.push({
-      text: `Analyze these plant photos for agronomic purposes. 
-      1. Identify the family, species, variety, and the main culture (e.g., Apple, Tomato, Wheat).
-      2. Identify the dominant phenological stage according to the BBCH scale (e.g., BBCH 65).
-      3. Identify any secondary phenological stages present (e.g., [BBCH 61, BBCH 63]).
-      4. Count the production organs visible: flowers and fruits. Provide counts and a brief detail of their development stages.
-      5. Extract phenotypic traits: color, shape, size, and health status (including diseases or deficiencies).
-      6. Identify the general phenological stage name, its intensity, and quality.
-      7. List main characterization traits for variety comparison.
-      8. Provide a detailed technical description.`,
-    });
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: {
-        parts: parts,
-      },
-      config: {
+    const genAI = getAI(apiKey);
+    const modelInstance = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -184,10 +160,34 @@ app.post("/api/gemini/analyze", async (req, res) => {
           },
           required: ["family", "species", "variety", "culture", "phenotypicTraits", "description", "phenologicalStage"],
         },
+      }
+    });
+    
+    const parts: any[] = images.slice(0, 6).map((img: any) => ({
+      inlineData: {
+        data: img.base64Image,
+        mimeType: img.mimeType || 'image/jpeg',
       },
+    }));
+
+    parts.push({
+      text: `Analyze these plant photos for agronomic purposes. 
+      1. Identify the family, species, variety, and the main culture (e.g., Apple, Tomato, Wheat).
+      2. Identify the dominant phenological stage according to the BBCH scale (e.g., BBCH 65).
+      3. Identify any secondary phenological stages present (e.g., [BBCH 61, BBCH 63]).
+      4. Count the production organs visible: flowers and fruits. Provide counts and a brief detail of their development stages.
+      5. Extract phenotypic traits: color, shape, size, and health status (including diseases or deficiencies).
+      6. Identify the general phenological stage name, its intensity, and quality.
+      7. List main characterization traits for variety comparison.
+      8. Provide a detailed technical description.`,
     });
 
-    const text = response.text;
+    const result = await modelInstance.generateContent({
+      contents: [{ role: "user", parts: parts }]
+    });
+
+    const response = await result.response;
+    const text = response.text();
     if (!text) {
       throw new Error("Empty response from Gemini");
     }
@@ -198,7 +198,7 @@ app.post("/api/gemini/analyze", async (req, res) => {
   }
 });
 
-app.post("/api/gemini/chat", async (req, res) => {
+app.post(["/api/gemini/chat", "/gemini/chat"], async (req, res) => {
   const { message, history, userKey } = req.body;
   
   const apiKey = userKey || process.env.GEMINI_API_KEY;
@@ -208,7 +208,8 @@ app.post("/api/gemini/chat", async (req, res) => {
 
   try {
     console.log(`[AI] Chat request`);
-    const ai = getAI(apiKey);
+    const genAI = getAI(apiKey);
+    const modelInstance = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const contents = history.map((msg: any) => ({
       role: msg.role === 'model' ? 'model' : 'user',
@@ -216,12 +217,12 @@ app.post("/api/gemini/chat", async (req, res) => {
     }));
     contents.push({ role: 'user', parts: [{ text: message }] });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+    const result = await modelInstance.generateContent({
       contents: contents
     });
 
-    res.json({ text: response.text });
+    const response = await result.response;
+    res.json({ text: response.text() });
   } catch (error: any) {
     console.error("[AI] Error in chat:", error);
     handleAIError(error, res);
@@ -229,7 +230,7 @@ app.post("/api/gemini/chat", async (req, res) => {
 });
 
 // Proxy for Weather API to avoid client-side fetch errors
-app.get("/api/weather/geocode", async (req, res) => {
+app.get(["/api/weather/geocode", "/weather/geocode"], async (req, res) => {
   try {
     const { name } = req.query;
     console.log(`[Weather] Geocoding: ${name}`);
@@ -306,7 +307,7 @@ app.get("/api/weather/geocode", async (req, res) => {
   }
 });
 
-app.get("/api/weather/forecast", async (req, res) => {
+app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
   try {
     const { lat, lng } = req.query;
     console.log(`[Weather] Forecast for lat=${lat}, lng=${lng}`);
@@ -455,6 +456,17 @@ app.get("/api/weather/forecast", async (req, res) => {
     console.error("[Weather] Weather proxy error:", error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Catch-all for API routes to prevent HTML redirection (Vite fallback)
+app.use(["/api/*", "/api"], (req, res) => {
+  console.warn(`[Server] 404 API Route non trouvée: ${req.method} ${req.url}`);
+  res.status(404).json({ 
+    error: "Route API non trouvée",
+    method: req.method,
+    path: req.url,
+    hint: "Assurez-vous que l'URL commence par /api/ et correspond à un endpoint valide."
+  });
 });
 
 export default app;

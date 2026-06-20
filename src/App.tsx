@@ -1376,7 +1376,7 @@ export default function App() {
       }
 
       const userKey = localStorage.getItem('user_gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || "";
-      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
 
       let responseTextStr = "";
       let groundingChunksData = null;

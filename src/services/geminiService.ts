@@ -43,7 +43,7 @@ export function clearAIInstance() {
 
 const getApiUrl = () => {
   // Always use the relative proxy if on the same origin
-  const baseUrl = import.meta.env.VITE_API_URL || '';
+  const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
   return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 };
 
