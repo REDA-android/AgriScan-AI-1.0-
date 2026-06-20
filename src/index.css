@@ -121,8 +121,24 @@ body.light-mode .text-slate-200,
 body.light-mode .text-slate-300,
 body.light-mode .text-slate-400,
 body.light-mode .text-emerald-50,
-body.light-mode .text-emerald-100 {
+body.light-mode .text-emerald-100,
+body.light-mode .text-emerald-200,
+body.light-mode .text-emerald-300,
+body.light-mode .text-white,
+body.light-mode [class*="text-white/"],
+body.light-mode [class*="text-slate-200/"],
+body.light-mode [class*="text-slate-300/"],
+body.light-mode [class*="text-slate-400/"] {
   color: #064e3b !important; /* emerald-950 */
+}
+
+body.light-mode .opacity-40,
+body.light-mode .opacity-50,
+body.light-mode .opacity-60,
+body.light-mode .opacity-70,
+body.light-mode .opacity-80,
+body.light-mode .opacity-90 {
+  opacity: 0.9 !important;
 }
 
 body.light-mode .text-slate-500 {
@@ -216,8 +232,10 @@ body.light-mode input, body.light-mode textarea {
 }
 
 body.light-mode .text-emerald-400,
-body.light-mode .text-emerald-300,
-body.light-mode .text-emerald-200 {
+body.light-mode .text-emerald-500,
+body.light-mode .text-emerald-600,
+body.light-mode [class*="text-emerald-400/"],
+body.light-mode [class*="text-emerald-500/"] {
   color: #059669 !important; /* emerald-600 */
 }
 

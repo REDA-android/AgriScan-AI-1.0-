@@ -7,26 +7,19 @@ const app = express();
 // This completely avoids having to rewrite the global req.url, ensuring 100% compatibility with local Vite environments.
 
 app.use((req: any, res: any, next: any) => {
-  console.log(`[Server] Method: ${req.method} | URL: ${req.url} | Path: ${req.path}`);
+  res.setHeader("X-Server-Reached", "true");
+  res.setHeader("X-Debug-Req-URL", req.url || "none");
+  console.log(`[Server] ${req.method} ${req.url}`);
   next();
 });
 
-// Custom body-parsers to avoid streaming conflicts with Vercel serverless platform
-app.use((req: any, res: any, next: any) => {
-  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
-    next();
-  } else {
-    express.json({ limit: "50mb" })(req, res, next);
-  }
+// Test route
+app.get(["/api/ping", "/ping"], (req, res) => {
+  res.json({ status: "pong", time: new Date().toISOString(), url: req.url });
 });
 
-app.use((req: any, res: any, next: any) => {
-  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
-    next();
-  } else {
-    express.urlencoded({ limit: "50mb", extended: true })(req, res, next);
-  }
-});
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 // Helper to init AI
 const getAI = (apiKey?: string) => {
@@ -34,139 +27,135 @@ const getAI = (apiKey?: string) => {
   if (key === "MY_GEMINI_API_KEY" || key === "MISSING_API_KEY") {
     key = "";
   }
-  
+
   // Fallback if we really want to prevent a crash
   const resolvedKey = key.trim() || "AIzaSyFakeKey_NoCrashOnInstantiation";
   return new GoogleGenAI({
     apiKey: resolvedKey,
     httpOptions: {
       headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
+        "User-Agent": "aistudio-build",
+      },
+    },
   });
 };
 
 const handleAIError = (error: any, res: any) => {
   const message = error.message || String(error);
   const status = error.status || 500;
-  
-  if (message.includes('403') || message.includes('PERMISSION_DENIED')) {
-    return res.status(403).json({ 
-      error: "Clé API non autorisée (403 PERMISSION_DENIED). Vérifiez que 'Generative Language API' est activée dans la console Google Cloud et que la clé n'a pas de restrictions IP/Referer bloquantes.",
-      original: message 
+
+  if (message.includes("403") || message.includes("PERMISSION_DENIED")) {
+    return res.status(403).json({
+      error:
+        "Clé API non autorisée (403 PERMISSION_DENIED). Vérifiez que 'Generative Language API' est activée dans la console Google Cloud et que la clé n'a pas de restrictions IP/Referer bloquantes.",
+      original: message,
     });
   }
-  
-  if (message.includes('429') || message.includes('RESOURCE_EXHAUSTED') || status === 429) {
-    if (message.includes('spending cap')) {
-      return res.status(429).json({ error: "Quota API dépassé : Le plafond de dépenses a été atteint.", original: message });
+
+  if (
+    message.includes("429") ||
+    message.includes("RESOURCE_EXHAUSTED") ||
+    status === 429
+  ) {
+    if (message.includes("spending cap")) {
+      return res
+        .status(429)
+        .json({
+          error: "Quota API dépassé : Le plafond de dépenses a été atteint.",
+          original: message,
+        });
     }
-    return res.status(429).json({ error: "Limite de requêtes atteinte : Veuillez patienter une minute avant de réessayer.", original: message });
+    return res
+      .status(429)
+      .json({
+        error:
+          "Limite de requêtes atteinte : Veuillez patienter une minute avant de réessayer.",
+        original: message,
+      });
   }
 
   res.status(status).json({ error: message });
 };
 
-app.post(["/api/gemini/generateContent", "/gemini/generateContent"], async (req, res) => {
-  const { model, contents, config, userKey } = req.body;
+app.post(
+  ["/api/gemini/generateContent", "/gemini/generateContent"],
+  async (req, res) => {
+    const { model, contents, config, userKey } = req.body;
 
-  const apiKey = userKey || process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "MISSING_API_KEY") {
-    return res.status(403).json({ error: "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage)." });
-  }
+    const apiKey = userKey || process.env.GEMINI_API_KEY;
+    if (
+      !apiKey ||
+      apiKey === "MY_GEMINI_API_KEY" ||
+      apiKey === "MISSING_API_KEY"
+    ) {
+      return res
+        .status(403)
+        .json({
+          error:
+            "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage).",
+        });
+    }
 
-  try {
-    console.log(`[AI] Generating content with model: ${req.body.model || 'default'}`);
-    const genAI = getAI(apiKey);
-    const modelInstance = genAI.getGenerativeModel({ model: req.body.model || "gemini-1.5-flash" });
-    
-    const result = await modelInstance.generateContent({
-      contents: req.body.contents,
-      generationConfig: req.body.config
-    });
+    try {
+      const ai = getAI(apiKey);
 
-    const response = await result.response;
-    console.log(`[AI] Generation successful`);
-    res.json({ 
-      text: response.text(), 
-      candidates: (response as any).candidates 
-    });
-  } catch (error: any) {
-    console.error("[AI] Error in generateContent:", error);
-    handleAIError(error, res);
-  }
-});
+      // Retry logic for 503 errors
+      let response;
+      let retries = 2;
+      while (retries >= 0) {
+        try {
+          response = await ai.models.generateContent({
+            model: req.body.model || "gemini-3.5-flash",
+            contents: req.body.contents,
+            config: req.body.config,
+          });
+          break;
+        } catch (err: any) {
+          if (err.message?.includes("503") && retries > 0) {
+            console.log(`[AI] 503 error, retrying... (${retries} left)`);
+            retries--;
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          throw err;
+        }
+      }
+
+      res.json({
+        text: response.text,
+        candidates: (response as any).candidates,
+      });
+    } catch (error: any) {
+      console.error("[AI] Error in generateContent:", error);
+      handleAIError(error, res);
+    }
+  },
+);
 
 app.post(["/api/gemini/analyze", "/gemini/analyze"], async (req, res) => {
   const { images, userKey } = req.body;
-  
+
   const apiKey = userKey || process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "MISSING_API_KEY") {
-    return res.status(403).json({ error: "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage)." });
+  if (
+    !apiKey ||
+    apiKey === "MY_GEMINI_API_KEY" ||
+    apiKey === "MISSING_API_KEY"
+  ) {
+    return res
+      .status(403)
+      .json({
+        error:
+          "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage).",
+      });
   }
 
   try {
-    console.log(`[AI] Analyzing ${images?.length || 0} images`);
-    const genAI = getAI(apiKey);
-    const modelInstance = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            family: { type: Type.STRING },
-            species: { type: Type.STRING },
-            variety: { type: Type.STRING },
-            culture: { type: Type.STRING, description: "Main culture name" },
-            bbchDominant: { type: Type.STRING, description: "Dominant BBCH stage" },
-            bbchSecondary: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "Secondary BBCH stages present"
-            },
-            organCounts: {
-              type: Type.OBJECT,
-              properties: {
-                flowers: { type: Type.NUMBER },
-                fruits: { type: Type.NUMBER },
-                details: { type: Type.STRING, description: "Details of counts by development stage" }
-              },
-              required: ["flowers", "fruits", "details"]
-            },
-            phenologicalStage: { type: Type.STRING, description: "General phenological stage name" },
-            stageIntensity: { type: Type.STRING },
-            stageQuality: { type: Type.STRING },
-            characterizationTraits: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
-            phenotypicTraits: {
-              type: Type.OBJECT,
-              properties: {
-                color: { type: Type.STRING },
-                shape: { type: Type.STRING },
-                size: { type: Type.STRING },
-                healthStatus: { type: Type.STRING },
-                diseasesOrDeficiencies: {
-                  type: Type.ARRAY,
-                  items: { type: Type.STRING },
-                },
-              },
-              required: ["color", "shape", "size", "healthStatus", "diseasesOrDeficiencies"],
-            },
-            description: { type: Type.STRING },
-          },
-          required: ["family", "species", "variety", "culture", "phenotypicTraits", "description", "phenologicalStage"],
-        },
-      }
-    });
-    
+    const ai = getAI(apiKey);
+
     const parts: any[] = images.slice(0, 6).map((img: any) => ({
       inlineData: {
         data: img.base64Image,
-        mimeType: img.mimeType || 'image/jpeg',
+        mimeType: img.mimeType || "image/jpeg",
       },
     }));
 
@@ -182,16 +171,106 @@ app.post(["/api/gemini/analyze", "/gemini/analyze"], async (req, res) => {
       8. Provide a detailed technical description.`,
     });
 
-    const result = await modelInstance.generateContent({
-      contents: [{ role: "user", parts: parts }]
-    });
+    let response;
+    let retries = 2;
+    while (retries >= 0) {
+      try {
+        response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents: [{ role: "user", parts: parts }],
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                family: { type: Type.STRING },
+                species: { type: Type.STRING },
+                variety: { type: Type.STRING },
+                culture: {
+                  type: Type.STRING,
+                  description: "Main culture name",
+                },
+                bbchDominant: {
+                  type: Type.STRING,
+                  description: "Dominant BBCH stage",
+                },
+                bbchSecondary: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                  description: "Secondary BBCH stages present",
+                },
+                organCounts: {
+                  type: Type.OBJECT,
+                  properties: {
+                    flowers: { type: Type.NUMBER },
+                    fruits: { type: Type.NUMBER },
+                    details: {
+                      type: Type.STRING,
+                      description: "Details of counts by development stage",
+                    },
+                  },
+                  required: ["flowers", "fruits", "details"],
+                },
+                phenologicalStage: {
+                  type: Type.STRING,
+                  description: "General phenological stage name",
+                },
+                stageIntensity: { type: Type.STRING },
+                stageQuality: { type: Type.STRING },
+                characterizationTraits: {
+                  type: Type.ARRAY,
+                  items: { type: Type.STRING },
+                },
+                description: { type: Type.STRING },
+                phenotypicTraits: {
+                  type: Type.OBJECT,
+                  properties: {
+                    color: { type: Type.STRING },
+                    shape: { type: Type.STRING },
+                    size: { type: Type.STRING },
+                    healthStatus: { type: Type.STRING },
+                    diseasesOrDeficiencies: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING },
+                    },
+                  },
+                  required: [
+                    "color",
+                    "shape",
+                    "size",
+                    "healthStatus",
+                    "diseasesOrDeficiencies",
+                  ],
+                },
+              },
+              required: [
+                "family",
+                "species",
+                "variety",
+                "culture",
+                "phenotypicTraits",
+                "description",
+                "phenologicalStage",
+              ],
+            },
+          },
+        });
+        break;
+      } catch (err: any) {
+        if (err.message?.includes("503") && retries > 0) {
+          console.log(`[AI-Analyze] 503 error, retrying... (${retries} left)`);
+          retries--;
+          await new Promise((r) => setTimeout(r, 2000));
+          continue;
+        }
+        throw err;
+      }
+    }
 
-    const response = await result.response;
-    const text = response.text();
-    if (!text) {
+    if (!response.text) {
       throw new Error("Empty response from Gemini");
     }
-    res.json(JSON.parse(text));
+    res.json(JSON.parse(response.text));
   } catch (error: any) {
     console.error("Error in analyze:", error);
     handleAIError(error, res);
@@ -200,29 +279,36 @@ app.post(["/api/gemini/analyze", "/gemini/analyze"], async (req, res) => {
 
 app.post(["/api/gemini/chat", "/gemini/chat"], async (req, res) => {
   const { message, history, userKey } = req.body;
-  
+
   const apiKey = userKey || process.env.GEMINI_API_KEY;
-  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "MISSING_API_KEY") {
-    return res.status(403).json({ error: "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage)." });
+  if (
+    !apiKey ||
+    apiKey === "MY_GEMINI_API_KEY" ||
+    apiKey === "MISSING_API_KEY"
+  ) {
+    return res
+      .status(403)
+      .json({
+        error:
+          "Clé API Gemini manquante. Veuillez configurer la clé dans les paramètres de l'application (Icône engrenage).",
+      });
   }
 
   try {
-    console.log(`[AI] Chat request`);
-    const genAI = getAI(apiKey);
-    const modelInstance = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    const contents = history.map((msg: any) => ({
-      role: msg.role === 'model' ? 'model' : 'user',
-      parts: [{ text: msg.text }]
-    }));
-    contents.push({ role: 'user', parts: [{ text: message }] });
+    const ai = getAI(apiKey);
 
-    const result = await modelInstance.generateContent({
-      contents: contents
+    const contents = history.map((msg: any) => ({
+      role: msg.role === "model" ? "model" : "user",
+      parts: [{ text: msg.text }],
+    }));
+    contents.push({ role: "user", parts: [{ text: message }] });
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: contents,
     });
 
-    const response = await result.response;
-    res.json({ text: response.text() });
+    res.json({ text: response.text });
   } catch (error: any) {
     console.error("[AI] Error in chat:", error);
     handleAIError(error, res);
@@ -239,7 +325,9 @@ app.get(["/api/weather/geocode", "/weather/geocode"], async (req, res) => {
     let data: any = null;
 
     try {
-      const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name as string)}&count=1&language=fr&format=json`);
+      const response = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name as string)}&count=1&language=fr&format=json`,
+      );
       if (response.ok) {
         data = await response.json();
       }
@@ -259,45 +347,54 @@ app.get(["/api/weather/geocode", "/weather/geocode"], async (req, res) => {
             if (owmData && owmData.length > 0) {
               // Map to Open-Meteo format
               data = {
-                results: [{
-                  latitude: owmData[0].lat,
-                  longitude: owmData[0].lon,
-                  name: owmData[0].name,
-                  admin1: owmData[0].state || owmData[0].country,
-                  country: owmData[0].country
-                }]
+                results: [
+                  {
+                    latitude: owmData[0].lat,
+                    longitude: owmData[0].lon,
+                    name: owmData[0].name,
+                    admin1: owmData[0].state || owmData[0].country,
+                    country: owmData[0].country,
+                  },
+                ],
               };
             }
           }
         } catch (e: any) {
-           console.error("[Weather] OWM geocode fallback err:", e.message);
+          console.error("[Weather] OWM geocode fallback err:", e.message);
         }
       } else if (process.env.WEATHERAPI_API_KEY && (!data || !data.results)) {
-         try {
-            const wapiUrl = `https://api.weatherapi.com/v1/search.json?key=${process.env.WEATHERAPI_API_KEY}&q=${encodeURIComponent(name as string)}`;
-            const wapiRes = await fetch(wapiUrl);
-            if (wapiRes.ok) {
-              const wapiData = await wapiRes.json();
-              if (wapiData && wapiData.length > 0) {
-                 data = {
-                  results: [{
+        try {
+          const wapiUrl = `https://api.weatherapi.com/v1/search.json?key=${process.env.WEATHERAPI_API_KEY}&q=${encodeURIComponent(name as string)}`;
+          const wapiRes = await fetch(wapiUrl);
+          if (wapiRes.ok) {
+            const wapiData = await wapiRes.json();
+            if (wapiData && wapiData.length > 0) {
+              data = {
+                results: [
+                  {
                     latitude: wapiData[0].lat,
                     longitude: wapiData[0].lon,
                     name: wapiData[0].name,
                     admin1: wapiData[0].region,
-                    country: wapiData[0].country
-                  }]
-                };
-              }
+                    country: wapiData[0].country,
+                  },
+                ],
+              };
             }
-         } catch (e: any) {
-            console.error("[Weather] WeatherAPI geocode fallback err:", e.message);
-         }
+          }
+        } catch (e: any) {
+          console.error(
+            "[Weather] WeatherAPI geocode fallback err:",
+            e.message,
+          );
+        }
       }
     }
 
     if (!data || !data.results || data.results.length === 0) {
-      return res.status(404).json({ error: "Lieu non trouvé (toutes les API ont échoué)" });
+      return res
+        .status(404)
+        .json({ error: "Lieu non trouvé (toutes les API ont échoué)" });
     }
 
     res.json(data);
@@ -311,7 +408,8 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
   try {
     const { lat, lng } = req.query;
     console.log(`[Weather] Forecast for lat=${lat}, lng=${lng}`);
-    if (!lat || !lng) return res.status(400).json({ error: "Lat and Lng are required" });
+    if (!lat || !lng)
+      return res.status(400).json({ error: "Lat and Lng are required" });
 
     // 1. Open-Meteo (Gratuit, aucune clé API requise)
     let baseData: any = {};
@@ -373,7 +471,7 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
           wind_speed_10m: 0,
           uv_index: 0,
           relative_humidity_2m: 50,
-          weather_code: 0
+          weather_code: 0,
         },
         daily: {
           time: [],
@@ -386,17 +484,21 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
           et0_fao_evapotranspiration: [],
           shortwave_radiation_sum: [],
           uv_index_max: [],
-          weather_code: []
-        }
+          weather_code: [],
+        },
       };
 
       const today = new Date().toISOString().split("T")[0];
 
       if (extraData.visualcrossing && extraData.visualcrossing.days) {
-        baseData.current.temperature_2m = extraData.visualcrossing.currentConditions?.temp || 20;
-        baseData.current.wind_speed_10m = extraData.visualcrossing.currentConditions?.windspeed || 0;
-        baseData.current.uv_index = extraData.visualcrossing.currentConditions?.uvindex || 0;
-        baseData.current.relative_humidity_2m = extraData.visualcrossing.currentConditions?.humidity || 50;
+        baseData.current.temperature_2m =
+          extraData.visualcrossing.currentConditions?.temp || 20;
+        baseData.current.wind_speed_10m =
+          extraData.visualcrossing.currentConditions?.windspeed || 0;
+        baseData.current.uv_index =
+          extraData.visualcrossing.currentConditions?.uvindex || 0;
+        baseData.current.relative_humidity_2m =
+          extraData.visualcrossing.currentConditions?.humidity || 50;
 
         extraData.visualcrossing.days.forEach((day: any) => {
           baseData.daily.time.push(day.datetime);
@@ -410,10 +512,13 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
           baseData.daily.weather_code.push(0);
         });
       } else if (extraData.weatherapi && extraData.weatherapi.forecast) {
-        baseData.current.temperature_2m = extraData.weatherapi.current?.temp_c || 20;
-        baseData.current.wind_speed_10m = extraData.weatherapi.current?.wind_kph || 0;
+        baseData.current.temperature_2m =
+          extraData.weatherapi.current?.temp_c || 20;
+        baseData.current.wind_speed_10m =
+          extraData.weatherapi.current?.wind_kph || 0;
         baseData.current.uv_index = extraData.weatherapi.current?.uv || 0;
-        baseData.current.relative_humidity_2m = extraData.weatherapi.current?.humidity || 50;
+        baseData.current.relative_humidity_2m =
+          extraData.weatherapi.current?.humidity || 50;
 
         extraData.weatherapi.forecast.forecastday.forEach((day: any) => {
           baseData.daily.time.push(day.date);
@@ -421,20 +526,31 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
           baseData.daily.temperature_2m_min.push(day.day.mintemp_c);
           baseData.daily.temperature_2m_mean.push(day.day.avgtemp_c);
           baseData.daily.precipitation_sum.push(day.day.totalprecip_mm);
-          baseData.daily.precipitation_probability_max.push(day.day.daily_chance_of_rain);
+          baseData.daily.precipitation_probability_max.push(
+            day.day.daily_chance_of_rain,
+          );
           baseData.daily.wind_speed_10m_max.push(day.day.maxwind_kph);
           baseData.daily.uv_index_max.push(day.day.uv);
           baseData.daily.weather_code.push(0);
         });
       } else if (extraData.openweathermap) {
-        baseData.current.temperature_2m = extraData.openweathermap.main?.temp || 20;
-        baseData.current.wind_speed_10m = (extraData.openweathermap.wind?.speed || 0) * 3.6;
-        baseData.current.relative_humidity_2m = extraData.openweathermap.main?.humidity || 50;
+        baseData.current.temperature_2m =
+          extraData.openweathermap.main?.temp || 20;
+        baseData.current.wind_speed_10m =
+          (extraData.openweathermap.wind?.speed || 0) * 3.6;
+        baseData.current.relative_humidity_2m =
+          extraData.openweathermap.main?.humidity || 50;
 
         baseData.daily.time.push(today);
-        baseData.daily.temperature_2m_max.push(extraData.openweathermap.main?.temp_max || 20);
-        baseData.daily.temperature_2m_min.push(extraData.openweathermap.main?.temp_min || 20);
-        baseData.daily.temperature_2m_mean.push(extraData.openweathermap.main?.temp || 20);
+        baseData.daily.temperature_2m_max.push(
+          extraData.openweathermap.main?.temp_max || 20,
+        );
+        baseData.daily.temperature_2m_min.push(
+          extraData.openweathermap.main?.temp_min || 20,
+        );
+        baseData.daily.temperature_2m_mean.push(
+          extraData.openweathermap.main?.temp || 20,
+        );
         baseData.daily.precipitation_sum.push(0);
         baseData.daily.precipitation_probability_max.push(0);
         baseData.daily.wind_speed_10m_max.push(baseData.current.wind_speed_10m);
@@ -448,7 +564,7 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
     const data = {
       ...baseData,
       extras: extraData,
-      isFallback: usedFallback
+      isFallback: usedFallback,
     };
 
     res.json(data);
@@ -461,11 +577,11 @@ app.get(["/api/weather/forecast", "/weather/forecast"], async (req, res) => {
 // Catch-all for API routes to prevent HTML redirection (Vite fallback)
 app.use(["/api/*", "/api"], (req, res) => {
   console.warn(`[Server] 404 API Route non trouvée: ${req.method} ${req.url}`);
-  res.status(404).json({ 
+  res.status(404).json({
     error: "Route API non trouvée",
     method: req.method,
     path: req.url,
-    hint: "Assurez-vous que l'URL commence par /api/ et correspond à un endpoint valide."
+    hint: "Assurez-vous que l'URL commence par /api/ et correspond à un endpoint valide.",
   });
 });
 
