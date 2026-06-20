@@ -49,6 +49,9 @@ import {
   CloudDrizzle,
   CloudRain,
   ChevronDown,
+  Eye,
+  EyeOff,
+  Key,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -1659,6 +1662,7 @@ export default function App() {
       "/assets/models/efficientnet_lite0.tflite",
   );
   const [showEdgeAISettings, setShowEdgeAISettings] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   // Initialize LiteRT
   useEffect(() => {
@@ -1775,6 +1779,9 @@ export default function App() {
   const [isListening, setIsListening] = useState(false);
   const [customGeminiKey, setCustomGeminiKey] = useState(
     () => localStorage.getItem("user_gemini_api_key") || "",
+  );
+  const [isKeyHidden, setIsKeyHidden] = useState(
+    () => !!localStorage.getItem("user_gemini_api_key"),
   );
   const [isSpeechSupported, setIsSpeechSupported] = useState(
     () =>
@@ -4592,6 +4599,101 @@ export default function App() {
                                 </span>
                               </p>
                             </div>
+                          </div>
+
+                          {/* Clé API Gemini de secours */}
+                          <div className="border-t border-white/5 my-4 pt-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[9px] font-bold text-blue-400 uppercase tracking-wider block ml-1 flex items-center gap-1.5">
+                                <Key size={12} className="text-blue-400" />
+                                Clé API Gemini de Secours (Optionnelle)
+                              </label>
+                              {customGeminiKey && (
+                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold uppercase tracking-widest animate-pulse">
+                                  {isKeyHidden ? "Mode Direct Actif & Sécurisé" : "Mode Direct Actif"}
+                                </span>
+                              )}
+                            </div>
+
+                            {isKeyHidden && customGeminiKey ? (
+                              /* Clé API enregistrée et masquée pour la sécurité */
+                              <div className="bg-emerald-500/5 dark:bg-[#09100c] border border-emerald-500/20 dark:border-emerald-500/25 rounded-2xl p-4 text-center space-y-3 shadow-inner">
+                                <div className="mx-auto w-10 h-10 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                                  <Lock size={16} className="animate-pulse" />
+                                </div>
+                                <div className="space-y-1">
+                                  <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                                    Clé API Enregistrée & Masquée
+                                  </h4>
+                                  <p className="text-[9px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                                    Votre clé API est enregistrée et masquée localement pour empêcher tout accès visuel ou toute modification accidentelle.
+                                  </p>
+                                </div>
+                                <div className="flex items-center justify-center gap-3 pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsKeyHidden(false)}
+                                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 text-[9px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all flex items-center gap-1.5"
+                                  >
+                                    <Edit2 size={10} /> Modifier la clé
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdateGeminiKey("");
+                                      setIsKeyHidden(false);
+                                    }}
+                                    className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/10 text-[9px] font-bold text-red-600 dark:text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all flex items-center gap-1.5"
+                                  >
+                                    <Trash2 size={10} /> Supprimer la clé
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              /* Mode de saisie de la clé */
+                              <>
+                                <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                                  Si vous rencontrez des erreurs de réponse HTML (notamment hébergé sur Vercel avec le proxy), saisissez votre propre Clé API Gemini ici. L'application communiquera directement avec l'API Google, en contournant le serveur de l'application.
+                                </p>
+                                <div className="relative">
+                                  <input
+                                    type={showApiKey ? "text" : "password"}
+                                    value={customGeminiKey}
+                                    onChange={(e) => {
+                                      handleUpdateGeminiKey(e.target.value);
+                                    }}
+                                    placeholder="Collez votre clé API Gemini (AIzaSy...)"
+                                    className="w-full bg-slate-100 focus:bg-white dark:bg-[#0d120f] border border-slate-200 dark:border-white/5 rounded-xl pl-3 pr-10 py-2.5 text-[10px] font-mono text-slate-800 dark:text-blue-400 placeholder-slate-450 dark:placeholder-slate-650 focus:outline-none focus:border-blue-500/30 transition-all shadow-inner"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowApiKey(!showApiKey)}
+                                    className="absolute right-3 top-2.5 w-6 h-6 rounded-lg bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                                  >
+                                    {showApiKey ? <EyeOff size={12} /> : <Eye size={12} />}
+                                  </button>
+                                </div>
+                                {customGeminiKey && (
+                                  <div className="flex items-center justify-between gap-2 pt-1 font-semibold">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsKeyHidden(true)}
+                                      className="w-full px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest hover:bg-emerald-500/20 dark:hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5"
+                                    >
+                                      <Lock size={12} /> Enregistrer & Masquer
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateGeminiKey("")}
+                                      className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/10 text-[9px] font-bold text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center gap-1"
+                                      title="Supprimer la clé"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </motion.div>
