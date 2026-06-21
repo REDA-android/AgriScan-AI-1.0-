@@ -1879,7 +1879,7 @@ export default function App() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: "gemini-3.5-flash",
+            model: "gemini-2.5-flash",
             contents,
             config,
             userKey,
@@ -1924,7 +1924,7 @@ export default function App() {
         const { GoogleGenAI } = await import("@google/genai");
         const ai = new GoogleGenAI({ apiKey: userKey });
         const res = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents,
           config,
         });

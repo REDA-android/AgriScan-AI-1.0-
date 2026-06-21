@@ -105,7 +105,7 @@ app.post(
       while (retries >= 0) {
         try {
           response = await ai.models.generateContent({
-            model: req.body.model || "gemini-3.5-flash",
+            model: req.body.model || "gemini-2.5-flash",
             contents: req.body.contents,
             config: req.body.config,
           });
