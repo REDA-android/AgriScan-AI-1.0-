@@ -3,6 +3,14 @@ import { ImageClassifier, FilesetResolver } from "@mediapipe/tasks-vision";
 let imageClassifier: ImageClassifier | null = null;
 let currentModelPath: string | null = null;
 
+const CDN_FALLBACKS: Record<string, string> = {
+  "/assets/models/mobilenetv3_small.tflite": "https://raw.githubusercontent.com/REDA-android/AgriScan-AI-1.0-/main/public/assets/models/mobilenetv3_small.tflite",
+  "/assets/models/mobilenetv3_large.tflite": "https://raw.githubusercontent.com/REDA-android/AgriScan-AI-1.0-/main/public/assets/models/mobilenetv3_large.tflite",
+  "/assets/models/mobilenetv2.tflite": "https://raw.githubusercontent.com/REDA-android/AgriScan-AI-1.0-/main/public/assets/models/mobilenetv2.tflite",
+  "/assets/models/efficientnet_lite0.tflite": "https://raw.githubusercontent.com/REDA-android/AgriScan-AI-1.0-/main/public/assets/models/efficientnet_lite0.tflite",
+  "/assets/models/plant_classifier.tflite": "https://raw.githubusercontent.com/REDA-android/AgriScan-AI-1.0-/main/public/assets/models/efficientnet_lite0.tflite",
+};
+
 /**
  * Initializes the LiteRT (MediaPipe) Image Classifier with a dynamic path
  */
@@ -12,6 +20,9 @@ export async function initLiteRT(
   if (imageClassifier && currentModelPath === modelPath) return imageClassifier;
 
   console.log(`[LiteRT] Initializing engine with model: ${modelPath}`);
+
+  let resolvedPath = modelPath;
+  let usingFallback = false;
 
   try {
     try {
@@ -26,10 +37,37 @@ export async function initLiteRT(
         );
       }
     } catch (e: any) {
-      console.log(
-        `[LiteRT] Gracefully skipping LiteRT initialization: ${e.message}`,
-      );
-      return null;
+      const fallbackUrl = CDN_FALLBACKS[modelPath];
+      if (fallbackUrl) {
+        console.warn(
+          `[LiteRT] Local model ${modelPath} unavailable (${e.message}). Automatically switched to stable public CDN: ${fallbackUrl}`,
+        );
+        resolvedPath = fallbackUrl;
+        usingFallback = true;
+      } else {
+        console.log(
+          `[LiteRT] Gracefully skipping LiteRT initialization: ${e.message}`,
+        );
+        return null;
+      }
+    }
+
+    if (usingFallback) {
+      try {
+        const response = await fetch(resolvedPath);
+        if (!response.ok) {
+          throw new Error(`Fallback model fetch failed with status: ${response.status}`);
+        }
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("text/html")) {
+          throw new Error(`Fallback model returned HTML instead of binary.`);
+        }
+      } catch (fallbackError: any) {
+        console.error(
+          `[LiteRT] Fallback CDN model loading failed: ${fallbackError.message}`,
+        );
+        return null;
+      }
     }
 
     // Force cleanup of old instance if model changed
@@ -55,7 +93,7 @@ export async function initLiteRT(
       );
       imageClassifier = await ImageClassifier.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: modelPath,
+          modelAssetPath: resolvedPath,
           delegate: "CPU",
         },
         runningMode: "IMAGE",
@@ -69,7 +107,7 @@ export async function initLiteRT(
       );
       imageClassifier = await ImageClassifier.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: modelPath,
+          modelAssetPath: resolvedPath,
         },
         runningMode: "IMAGE",
         maxResults: 5,
@@ -78,7 +116,7 @@ export async function initLiteRT(
     }
 
     currentModelPath = modelPath;
-    console.log(`[LiteRT] Engine successfully initialized with ${modelPath}`);
+    console.log(`[LiteRT] Engine successfully initialized with ${resolvedPath}`);
     return imageClassifier;
   } catch (error: any) {
     console.error(
