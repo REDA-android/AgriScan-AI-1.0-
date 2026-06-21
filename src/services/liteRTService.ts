@@ -4,9 +4,9 @@ let imageClassifier: ImageClassifier | null = null;
 let currentModelPath: string | null = null;
 
 const CDN_FALLBACKS: Record<string, string> = {
-  "/assets/models/mobilenetv3_small.tflite": "https://huggingface.co/qualcomm/MobileNet-v3-Small-Quantized-TFLite/resolve/main/MobileNet_v3_Small_Quantized.tflite",
-  "/assets/models/mobilenetv3_large.tflite": "https://huggingface.co/qualcomm/MobileNet-v3-Large-Quantized-TFLite/resolve/main/MobileNet_v3_Large_Quantized.tflite",
-  "/assets/models/mobilenetv2.tflite": "https://huggingface.co/qualcomm/MobileNet-v2-Quantized-TFLite/resolve/main/MobileNet_v2_Quantized.tflite",
+  "/assets/models/mobilenetv3_small.tflite": "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
+  "/assets/models/mobilenetv3_large.tflite": "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
+  "/assets/models/mobilenetv2.tflite": "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
   "/assets/models/efficientnet_lite0.tflite": "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
   "/assets/models/plant_classifier.tflite": "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
 };
