@@ -59,6 +59,7 @@ export const ChatBot: React.FC = () => {
       <button 
         onClick={() => setIsOpen(true)}
         className={`fixed bottom-[calc(7.5rem+env(safe-area-inset-bottom))] right-4 md:right-6 md:bottom-24 w-14 h-14 btn-glass-primary rounded-full flex items-center justify-center text-emerald-300 shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:scale-110 transition-all z-[90] ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
+        aria-label="Ouvrir le ChatBot"
       >
         <MessageSquare size={24} className="fill-current" />
       </button>
@@ -85,12 +86,14 @@ export const ChatBot: React.FC = () => {
               onClick={() => setShowClearConfirm(true)}
               className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-red-500/20 hover:text-red-400 transition-colors"
               title="Effacer l'historique"
+              aria-label="Effacer l'historique"
             >
               <Trash2 size={16} />
             </button>
             <button 
               onClick={() => setIsOpen(false)}
               className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+              aria-label="Fermer le ChatBot"
             >
               <X size={18} />
             </button>
@@ -135,6 +138,7 @@ export const ChatBot: React.FC = () => {
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
               className="absolute right-2 w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 hover:bg-emerald-500/30 transition-colors disabled:opacity-50 disabled:hover:bg-emerald-500/20"
+              aria-label="Envoyer le message"
             >
               <Send size={14} className="ml-0.5" />
             </button>

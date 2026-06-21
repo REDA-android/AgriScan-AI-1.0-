@@ -332,7 +332,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
       {/* Image Gallery / Upload Area */}
       <div className="bg-[#161c18] rounded-2xl p-4 shadow-none border border-white/5">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold text-slate-200">Photos ({files.length})</h3>
+          <h2 className="font-bold text-slate-200">Photos ({files.length})</h2>
           {files.length > 0 && (
             <div className="flex gap-2">
               <button 

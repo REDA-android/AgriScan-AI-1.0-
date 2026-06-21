@@ -2,6 +2,8 @@ import { ImageClassifier, FilesetResolver } from "@mediapipe/tasks-vision";
 
 let imageClassifier: ImageClassifier | null = null;
 let currentModelPath: string | null = null;
+let cachedVision: any = null;
+let initPromise: Promise<ImageClassifier | null> | null = null;
 
 const CDN_FALLBACKS: Record<string, string> = {
   "/assets/models/mobilenetv3_small.tflite": "https://storage.googleapis.com/mediapipe-models/image_classifier/efficientnet_lite0/int8/1/efficientnet_lite0.tflite",
@@ -18,11 +20,18 @@ export async function initLiteRT(
   modelPath: string = "/assets/models/plant_classifier.tflite",
 ) {
   if (imageClassifier && currentModelPath === modelPath) return imageClassifier;
+  
+  if (initPromise && currentModelPath === modelPath) {
+    return initPromise;
+  }
 
-  console.log(`[LiteRT] Initializing engine with model: ${modelPath}`);
+  currentModelPath = modelPath;
 
-  let resolvedPath = modelPath;
-  let usingFallback = false;
+  initPromise = (async () => {
+    console.log(`[LiteRT] Initializing engine with model: ${modelPath}`);
+
+    let resolvedPath = modelPath;
+    let usingFallback = false;
 
   try {
     try {
@@ -81,9 +90,12 @@ export async function initLiteRT(
       imageClassifier = null;
     }
 
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm",
-    );
+    if (!cachedVision) {
+      cachedVision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm",
+      );
+    }
+    const vision = cachedVision;
 
     // Attempt initialization with CPU delegate first or GPU fallback for ultimate stability.
     // WebAssembly memory can easily crash on mobile/iframe embedded environments if GPU WebGL context fails.
@@ -125,6 +137,8 @@ export async function initLiteRT(
     );
     return null;
   }
+  })();
+  return initPromise;
 }
 
 /**

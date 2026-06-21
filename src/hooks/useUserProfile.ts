@@ -11,12 +11,19 @@ export const useUserProfile = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let unsubscribeProfile: (() => void) | undefined;
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = undefined;
+      }
+
       if (firebaseUser) {
         // Listen for profile changes
-        const unsubscribeProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), 
+        unsubscribeProfile = onSnapshot(doc(db, 'users', firebaseUser.uid), 
           async (snapshot) => {
             if (snapshot.exists()) {
               setProfile(snapshot.data() as UserProfile);
@@ -43,15 +50,16 @@ export const useUserProfile = () => {
             setLoading(false);
           }
         );
-
-        return () => unsubscribeProfile();
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
-    return () => unsubscribeAuth();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
 
   return { user, profile, loading, error };

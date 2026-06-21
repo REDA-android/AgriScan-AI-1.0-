@@ -4211,7 +4211,7 @@ export default function App() {
   }
 
   return (
-    <div
+    <main
       className="h-[100dvh] overflow-hidden bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5 relative"
       dir={isArabic ? "rtl" : "ltr"}
     >
@@ -4222,7 +4222,7 @@ export default function App() {
             AgroScan <span className="text-emerald-400">IA</span>
           </h1>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.1em]">
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.1em]">
               AGRONOMIE
             </p>
             {!isOnline && (
@@ -4255,6 +4255,7 @@ export default function App() {
             onClick={() => setIsLightMode(!isLightMode)}
             className="w-10 h-10 rounded-full bg-[#0d120f] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
             title="Thème"
+            aria-label="Basculer le thème"
           >
             {isLightMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
@@ -4262,6 +4263,7 @@ export default function App() {
             onClick={() => setShowLogoutConfirm(true)}
             className="w-10 h-10 rounded-full bg-[#0d120f] border border-white/5 flex items-center justify-center overflow-hidden hover:opacity-80 transition-opacity"
             title="Profil & Déconnexion"
+            aria-label="Profil et déconnexion"
           >
             {user?.photoURL ? (
               <img
@@ -6023,11 +6025,12 @@ export default function App() {
       </nav>
 
       {/* Notifications UI */}
-      <div className="fixed bottom-24 left-0 right-0 p-4 z-[200] flex flex-col gap-2 pointer-events-none items-center max-w-md mx-auto">
-        <AnimatePresence>
-          {appNotifications.map((n) => (
-            <motion.div
-              key={n.id}
+      {appNotifications.length > 0 && (
+        <div className="fixed bottom-24 left-0 right-0 p-4 z-[200] flex flex-col gap-2 pointer-events-none items-center max-w-md mx-auto">
+          <AnimatePresence>
+            {appNotifications.map((n) => (
+              <motion.div
+                key={n.id}
               initial={{ y: 50, opacity: 0, scale: 0.9 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 20, opacity: 0, scale: 0.9 }}
@@ -6050,7 +6053,7 @@ export default function App() {
             </motion.div>
           ))}
         </AnimatePresence>
-      </div>
-    </div>
+      </div>)}
+    </main>
   );
 }
