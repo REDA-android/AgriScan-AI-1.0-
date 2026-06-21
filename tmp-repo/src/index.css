@@ -1,0 +1,327 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer components {
+  .btn-glass {
+    @apply relative overflow-hidden backdrop-blur-xl bg-white/[0.05] border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] transition-all duration-300 ease-out;
+  }
+  .btn-glass:hover {
+    @apply bg-white/[0.1] shadow-[0_12px_48px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] -translate-y-[2px] border-white/20;
+  }
+  .btn-glass:active {
+    @apply bg-white/[0.03] shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)] translate-y-0 border-white/10;
+  }
+  
+  .btn-glass-primary {
+    @apply relative overflow-hidden backdrop-blur-xl bg-emerald-500/[0.15] border border-emerald-400/30 shadow-[0_8px_32px_rgba(16,185,129,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all duration-300 ease-out text-emerald-300;
+  }
+  .btn-glass-primary:hover {
+    @apply bg-emerald-500/[0.25] shadow-[0_12px_48px_rgba(16,185,129,0.5),inset_0_1px_0_rgba(255,255,255,0.4),0_0_20px_rgba(16,185,129,0.2)] -translate-y-[2px] border-emerald-400/50 text-emerald-200;
+  }
+  .btn-glass-primary:active {
+    @apply bg-emerald-500/[0.1] shadow-[0_4px_16px_rgba(16,185,129,0.2),inset_0_1px_0_rgba(255,255,255,0.2)] translate-y-0 border-emerald-400/20 text-emerald-400;
+  }
+}
+
+body {
+  background-color: #111412;
+  color: #f8fafc; /* text-slate-50 */
+}
+
+/* Custom Range Slider */
+input[type=range].slider-glass {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+  height: 24px;
+}
+
+input[type=range].slider-glass::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 20px;
+  width: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 1);
+  cursor: pointer;
+  margin-top: -8px; /* For tracking */
+}
+
+input[type=range].slider-glass::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: var(--slider-bg, rgba(255, 255, 255, 0.1));
+  border-radius: 2px;
+}
+
+input[type=range].slider-glass:focus {
+  outline: none;
+}
+
+/* Light Mode Base */
+body.light-mode {
+  background-color: #f0fdf4 !important; /* emerald-50 or green-50 */
+  color: #064e3b !important; /* emerald-950 */
+}
+
+body.light-mode .bg-\[\#111412\],
+body.light-mode .bg-\[\#161c18\],
+body.light-mode .bg-\[\#0d120f\],
+body.light-mode .bg-\[\#121c15\],
+body.light-mode .bg-slate-900,
+body.light-mode .bg-slate-900\/40,
+body.light-mode .bg-slate-900\/60,
+body.light-mode .btn-glass {
+  background-color: #ffffff !important;
+  border-color: #d1fae5 !important; /* emerald-100 */
+}
+
+body.light-mode .bg-\[\#111412\]\/50,
+body.light-mode .bg-\[\#161c18\]\/50,
+body.light-mode .bg-\[\#0d120f\]\/50,
+body.light-mode .bg-\[\#121c15\]\/50,
+body.light-mode .bg-slate-800\/50,
+body.light-mode .bg-slate-900\/50 {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.light-mode .bg-\[\#111412\]\/20,
+body.light-mode .bg-\[\#161c18\]\/20,
+body.light-mode .bg-\[\#0d120f\]\/20,
+body.light-mode .bg-\[\#121c15\]\/20,
+body.light-mode .bg-slate-900\/20 {
+  background-color: rgba(16, 185, 129, 0.05) !important;
+}
+
+body.light-mode .bg-\[\#111412\]\/10,
+body.light-mode .bg-\[\#161c18\]\/10,
+body.light-mode .bg-\[\#0d120f\]\/10,
+body.light-mode .bg-\[\#121c15\]\/10,
+body.light-mode .bg-slate-900\/10 {
+  background-color: rgba(16, 185, 129, 0.03) !important;
+}
+
+body.light-mode .border-\[\#111412\],
+body.light-mode .border-slate-800,
+body.light-mode .border-slate-900 {
+  border-color: #d1fae5 !important;
+}
+
+body.light-mode .text-slate-50,
+body.light-mode .text-slate-100,
+body.light-mode .text-slate-200,
+body.light-mode .text-slate-300,
+body.light-mode .text-slate-400,
+body.light-mode .text-emerald-50,
+body.light-mode .text-emerald-100,
+body.light-mode .text-emerald-200,
+body.light-mode .text-emerald-300,
+body.light-mode .text-white,
+body.light-mode [class*="text-white/"],
+body.light-mode [class*="text-slate-200/"],
+body.light-mode [class*="text-slate-300/"],
+body.light-mode [class*="text-slate-400/"] {
+  color: #064e3b !important; /* emerald-950 */
+}
+
+body.light-mode .opacity-40,
+body.light-mode .opacity-50,
+body.light-mode .opacity-60,
+body.light-mode .opacity-70,
+body.light-mode .opacity-80,
+body.light-mode .opacity-90 {
+  opacity: 0.9 !important;
+}
+
+body.light-mode .text-slate-500 {
+  color: #059669 !important; /* emerald-600 */
+}
+
+body.light-mode .text-slate-600 {
+  color: #047857 !important; /* emerald-700 */
+}
+
+body.light-mode .text-purple-300,
+body.light-mode .text-purple-400 {
+  color: #7e22ce !important; /* purple-700 */
+}
+
+body.light-mode .text-sky-300,
+body.light-mode .text-sky-400 {
+  color: #0369a1 !important; /* sky-700 */
+}
+
+body.light-mode .text-teal-300,
+body.light-mode .text-teal-400 {
+  color: #0f766e !important; /* teal-700 */
+}
+
+body.light-mode .text-blue-300,
+body.light-mode .text-blue-400 {
+  color: #1d4ed8 !important; /* blue-700 */
+}
+
+body.light-mode .text-white {
+  color: #064e3b !important; /* emerald-950 */
+}
+
+body.light-mode .bg-emerald-500 .text-white,
+body.light-mode .bg-red-500 .text-white,
+body.light-mode .bg-blue-500 .text-white,
+body.light-mode .bg-emerald-600 .text-white,
+body.light-mode .bg-red-600 .text-white,
+body.light-mode .bg-blue-600 .text-white,
+body.light-mode .bg-black .text-white,
+body.light-mode .bg-emerald-500\/100 .text-white,
+body.light-mode .bg-red-500\/100 .text-white,
+body.light-mode .bg-blue-500\/100 .text-white,
+body.light-mode .bg-emerald-500 .text-slate-50,
+body.light-mode .bg-red-500 .text-slate-50,
+body.light-mode .bg-blue-500 .text-slate-50,
+body.light-mode .btn-glass-primary .text-white,
+body.light-mode .btn-glass-primary .text-emerald-300,
+body.light-mode .btn-glass-primary .text-emerald-400,
+body.light-mode .force-text-white {
+  color: #ffffff !important;
+}
+
+body.light-mode .text-white\/60,
+body.light-mode .text-white\/70,
+body.light-mode .text-white\/80 {
+  color: rgba(6, 78, 59, 0.6) !important;
+}
+
+body.light-mode .force-text-white {
+  color: #ffffff !important;
+}
+
+body.light-mode .border-white\/5,
+body.light-mode .border-white\/10,
+body.light-mode .border-white\/20 {
+  border-color: #d1fae5 !important;
+}
+
+body.light-mode .bg-white\/5,
+body.light-mode .bg-white\/10 {
+  background-color: #f0fdf4 !important; /* emerald-50 */
+}
+
+body.light-mode button:hover.bg-white\/5,
+body.light-mode button:hover.bg-white\/10 {
+  background-color: #d1fae5 !important; /* emerald-100 */
+}
+
+body.light-mode .bg-\[\#161c18\]\/80,
+body.light-mode .bg-\[\#161c18\]\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #d1fae5 !important;
+}
+
+body.light-mode input, body.light-mode textarea {
+  color: #064e3b !important;
+  background-color: #ffffff !important;
+  border-color: #10b981 !important; /* emerald-500 */
+}
+
+body.light-mode .text-emerald-400,
+body.light-mode .text-emerald-500,
+body.light-mode .text-emerald-600,
+body.light-mode [class*="text-emerald-400/"],
+body.light-mode [class*="text-emerald-500/"] {
+  color: #059669 !important; /* emerald-600 */
+}
+
+body.light-mode .text-red-400,
+body.light-mode .text-red-300 {
+  color: #dc2626 !important; /* red-600 */
+}
+
+body.light-mode .text-amber-400,
+body.light-mode .text-amber-300 {
+  color: #d97706 !important; /* amber-600 */
+}
+
+body.light-mode .btn-glass-primary {
+  background-color: #10b981 !important; /* emerald-500 */
+  border-color: #059669 !important;
+  color: #ffffff !important; /* white text for visibility */
+}
+
+body.light-mode .btn-glass-primary:hover {
+  background-color: #059669 !important; /* emerald-600 */
+}
+
+body.light-mode .btn-glass-primary .text-emerald-300,
+body.light-mode .btn-glass-primary .text-emerald-400 {
+  color: #ffffff !important;
+}
+
+body.light-mode .bg-emerald-500\/10,
+body.light-mode .bg-emerald-500\/20,
+body.light-mode .bg-emerald-500\/30 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+body.light-mode .bg-red-500\/10,
+body.light-mode .bg-red-500\/20 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+body.light-mode .bg-blue-500\/10,
+body.light-mode .bg-blue-500\/20 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+body.light-mode .border-emerald-500\/20,
+body.light-mode .border-emerald-500\/30,
+body.light-mode .border-emerald-500\/40 {
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+body.light-mode .border-red-500\/20 {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+body.light-mode .shadow-emerald-900\/5,
+body.light-mode .shadow-emerald-900\/10,
+body.light-mode .shadow-emerald-950\/10 {
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.08) !important;
+}
+
+body.light-mode nav.fixed {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #d1fae5 !important;
+  box-shadow: 0 10px 40px rgba(6, 78, 59, 0.1) !important;
+}
+
+body.light-mode .placeholder-slate-600,
+body.light-mode .placeholder-slate-500 {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+body.light-mode .from-emerald-500.to-\[\#124227\] {
+  background-image: linear-gradient(to right, #10b981, #059669) !important;
+}
+
+body.light-mode .text-blue-400,
+body.light-mode .text-blue-300 {
+  color: #2563eb !important; /* blue-600 */
+}
+
+body.light-mode .btn-glass.text-blue-400 {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Scope Leaflet's z-index layers so they do not overlap high-level UI controls of the application */
+.leaflet-container {
+  z-index: 1 !important;
+}

@@ -1,0 +1,12 @@
+{
+  "name": "AgroScan IA",
+  "description": "Application d\u0027analyse botanique et phénotypique par IA pour l\u0027agronomie, avec cartographie interactive et répertoire collaboratif.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
