@@ -392,6 +392,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                   </span>
                 </div>
                 <button 
+                  aria-label="Supprimer l'image"
                   onClick={(e) => {
                     e.stopPropagation();
                     removeFile(i);
@@ -458,6 +459,7 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
                   <span className="font-black text-xs text-slate-300 uppercase tracking-wider">Ajustements botaniques</span>
                 </div>
                 <button
+                  aria-label="Fermer"
                   onClick={() => setSelectedImageIndex(null)}
                   className="p-1 hover:bg-white/10 rounded-full text-slate-400 hover:text-slate-400"
                 >

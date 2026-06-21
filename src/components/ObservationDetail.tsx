@@ -64,7 +64,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
     <div className="min-h-screen bg-gray-50 pb-24">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-[#161c18]/80 backdrop-blur-md border-b px-4 py-3 flex items-center justify-between">
-        <button onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button aria-label="Retour" onClick={onBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6 text-gray-900" />
         </button>
         <div className="text-center flex-grow px-4">
@@ -77,6 +77,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
         </div>
         <div className="flex gap-1">
           <button 
+            aria-label="Supprimer l'observation"
             onClick={() => onDelete(observation.id)}
             className="p-2 text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
           >
@@ -103,12 +104,14 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
         {images.length > 1 && (
           <>
             <button 
+              aria-label="Image précédente"
               onClick={() => setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1))}
               className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-[#161c18]/20 backdrop-blur-md rounded-full text-white"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button 
+              aria-label="Image suivante"
               onClick={() => setCurrentImageIndex(prev => (prev < images.length - 1 ? prev + 1 : 0))}
               className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-[#161c18]/20 backdrop-blur-md rounded-full text-white"
             >
@@ -175,6 +178,7 @@ const ObservationDetail: React.FC<ObservationDetailProps> = ({
                 {t.analysis}
               </h2>
               <button 
+                aria-label="Réinitialiser"
                 onClick={() => onReset(observation.id)}
                 className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-500/10 rounded-full transition-all"
               >
