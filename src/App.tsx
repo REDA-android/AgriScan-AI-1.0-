@@ -5844,9 +5844,6 @@ export default function App() {
           >
             {t.map}
           </span>
-          {activeTab === "map" && (
-            <div className="absolute -bottom-2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />
-          )}
         </button>
 
         <button
@@ -5863,9 +5860,6 @@ export default function App() {
           >
             {t.weather}
           </span>
-          {activeTab === "weather" && (
-            <div className="absolute -bottom-2 w-1 h-1 bg-blue-400 rounded-full shadow-[0_0_8px_rgba(59,130,246,1)] animate-pulse" />
-          )}
         </button>
 
         <button
@@ -5892,9 +5886,6 @@ export default function App() {
               {t.scan}
             </span>
           </div>
-          {activeTab === "scan" && (
-            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />
-          )}
         </button>
 
         <button
@@ -5911,9 +5902,6 @@ export default function App() {
           >
             {t.catalog}
           </span>
-          {activeTab === "catalog" && (
-            <div className="absolute -bottom-2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />
-          )}
         </button>
 
         {isAdmin && (
@@ -5934,9 +5922,6 @@ export default function App() {
             >
               {t.admin}
             </span>
-            {activeTab === "admin" && (
-              <div className="absolute -bottom-2 w-1 h-1 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />
-            )}
           </button>
         )}
       </nav>
