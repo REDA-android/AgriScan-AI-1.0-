@@ -11,7 +11,7 @@ export interface OfflineObservation {
   fileData: string; // base64
   fileType: string;
   capturedAt: string;
-  status: 'pending' | 'syncing' | 'error';
+  status: 'pending' | 'syncing' | 'error' | 'completed';
   error?: string;
 }
 

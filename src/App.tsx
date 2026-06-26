@@ -52,6 +52,9 @@ import {
   Eye,
   EyeOff,
   Key,
+  Cpu,
+  Sliders,
+  Check,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -96,7 +99,7 @@ import {
   PlantAnalysis,
   clearAIInstance,
 } from "./services/geminiService";
-import { initLiteRT, analyzeOffline } from "./services/liteRTService";
+import { initLiteRT, analyzeOffline, GOOGLE_AI_EDGE_MODELS } from "./services/liteRTService";
 import { triggerHaptic } from "./utils/haptics";
 
 import {
@@ -497,7 +500,9 @@ function ObservationDetail({
                 <h4 className="text-lg font-bold mb-2">
                   {observation.status === "uploading"
                     ? "Téléversement des photos..."
-                    : "Analyse IA en cours..."}
+                    : observation.status === "syncing"
+                      ? "Synchronisation..."
+                      : "Analyse IA en cours..."}
                 </h4>
                 <p className="text-sm opacity-80 max-w-xs">
                   {observation.description ||
@@ -1656,13 +1661,30 @@ export default function App() {
   const [quotaExceeded, setQuotaExceeded] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLiteRTReady, setIsLiteRTReady] = useState(false);
-  const [localModelPath, setLocalModelPath] = useState(
-    () =>
-      localStorage.getItem("local_model_path") ||
-      "/assets/models/efficientnet_lite0.tflite",
-  );
+  const [localModelPath, setLocalModelPath] = useState<string>(() => {
+    const saved = localStorage.getItem("local_model_path");
+    if (saved && GOOGLE_AI_EDGE_MODELS.some((m) => m.url === saved)) {
+      return saved;
+    }
+    return GOOGLE_AI_EDGE_MODELS[0].url;
+  });
+  const [forceLocalAnalysis, setForceLocalAnalysis] = useState(() => {
+    return localStorage.getItem("force_local_analysis") === "true";
+  });
   const [showEdgeAISettings, setShowEdgeAISettings] = useState(false);
+  const [showAiEdgeDashboard, setShowAiEdgeDashboard] = useState(false);
+  const [isBenchmarking, setIsBenchmarking] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [edgeLogs, setEdgeLogs] = useState<{time: string, message: string, type: string}[]>([]);
+
+  useEffect(() => {
+    // We import liteRTLogs and add events inside useEffect or outside
+    const handleLog = (e: any) => {
+      setEdgeLogs(prev => [e.detail, ...prev].slice(0, 50));
+    };
+    window.addEventListener('liteRTLog', handleLog);
+    return () => window.removeEventListener('liteRTLog', handleLog);
+  }, []);
 
   // Initialize LiteRT
   useEffect(() => {
@@ -1681,7 +1703,40 @@ export default function App() {
   const updateLocalModel = (path: string) => {
     setLocalModelPath(path);
     localStorage.setItem("local_model_path", path);
-    notifyUser(`Modèle local mis à jour : ${path.split("/").pop()}`, "info");
+    const modelName = GOOGLE_AI_EDGE_MODELS.find(m => m.url === path)?.name || path.split("/").pop();
+    notifyUser(`Modèle local mis à jour : ${modelName}`, "info");
+  };
+
+  const runEdgeBenchmark = async () => {
+    if (!isLiteRTReady) {
+      notifyUser("Le moteur Google AI Edge n'est pas encore prêt.", "error");
+      return;
+    }
+    setIsBenchmarking(true);
+    triggerHaptic("light");
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 224;
+      canvas.height = 224;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.fillStyle = "#10b981";
+        ctx.fillRect(0, 0, 224, 224);
+      }
+      
+      const startTime = performance.now();
+      await analyzeOffline(canvas, localModelPath);
+      const endTime = performance.now();
+      const duration = Math.round(endTime - startTime);
+      
+      triggerHaptic("success");
+      notifyUser(`Benchmark réussi ! Temps d'exécution local : ${duration} ms.`, "success");
+    } catch (e: any) {
+      console.error("Benchmark failed", e);
+      notifyUser("Échec du benchmark : " + e.message, "error");
+    } finally {
+      setIsBenchmarking(false);
+    }
   };
 
   // Notification State
@@ -2930,6 +2985,24 @@ export default function App() {
     const queue = await getOfflineObservations();
     if (queue.length === 0) return;
 
+    // Check for network stability to avoid mixed mode errors
+    const connection = (navigator as any).connection;
+    const isUnstable = connection && (
+      connection.effectiveType === 'slow-2g' || 
+      connection.effectiveType === '2g' || 
+      connection.downlink < 1
+    );
+
+    if (isUnstable) {
+      const confirmSync = window.confirm(
+        "Votre connexion semble instable.\nVoulez-vous tout de même synchroniser vos " + 
+        queue.length + " observations hors-ligne maintenant ?"
+      );
+      if (!confirmSync) {
+        return;
+      }
+    }
+
     setIsSyncing(true);
     console.log(`Syncing ${queue.length} offline observations...`);
     let syncedCount = 0;
@@ -2948,6 +3021,9 @@ export default function App() {
         const blob = await dataUrlToBlob(item.fileData);
         const storageUrl = await uploadImage(blob, storagePath);
 
+        const hasOfflineAnalysis = !!(item.metadata as any).offlineAnalysis;
+        const offlineData = hasOfflineAnalysis ? (item.metadata as any).offlineAnalysis : {};
+
         const observationData = {
           userId: user.uid,
           location: {
@@ -2958,15 +3034,15 @@ export default function App() {
           capturedAt: item.capturedAt || new Date().toISOString(),
           imageUrl: storageUrl,
           imageUrls: [storageUrl],
-          culture: (item.metadata as any).culture || "En attente d'analyse",
-          variety: (item.metadata as any).variety || "En attente d'analyse",
-          species: (item.metadata as any).species || "Inconnu",
-          family: (item.metadata as any).family || "Inconnu",
-          domain: (item.metadata as any).domain || "Général",
-          bbchDominant: "",
-          bbchSecondary: [],
-          organCounts: { flowers: 0, fruits: 0, details: "" },
-          phenotypicTraits: {
+          culture: offlineData.culture || (item.metadata as any).culture || "En attente d'analyse",
+          variety: offlineData.variety || (item.metadata as any).variety || "En attente d'analyse",
+          species: offlineData.species || (item.metadata as any).species || "Inconnu",
+          family: offlineData.family || (item.metadata as any).family || "Inconnu",
+          domain: offlineData.domain || (item.metadata as any).domain || "Général",
+          bbchDominant: offlineData.bbchDominant || "",
+          bbchSecondary: offlineData.bbchSecondary || [],
+          organCounts: offlineData.organCounts || { flowers: 0, fruits: 0, details: "" },
+          phenotypicTraits: offlineData.phenotypicTraits || {
             color: "?",
             shape: "?",
             size: "?",
@@ -2974,7 +3050,7 @@ export default function App() {
             diseasesOrDeficiencies: [],
           },
           userNotes: (item.metadata as any).userNotes || "Capture hors-ligne",
-          status: "pending",
+          status: hasOfflineAnalysis ? "completed" : "pending",
           plantingDate: (item.metadata as any).plantingDate || null,
           breeder: (item.metadata as any).breeder || null,
           pruningDate: (item.metadata as any).pruningDate || null,
@@ -2989,15 +3065,50 @@ export default function App() {
           observationData,
         );
 
-        // Trigger background analysis
-        const images = [
-          {
-            base64Image: item.fileData.split(",")[1],
-            mimeType: item.fileType || "image/jpeg",
-            dataUrl: item.fileData,
-          },
-        ];
-        runBackgroundAnalysis(docRef.id, images, item.metadata);
+        if (!hasOfflineAnalysis) {
+          if (forceLocalAnalysis && isLiteRTReady) {
+            try {
+              console.log("[LiteRT] Running local analysis during background sync...");
+              const img = new Image();
+              img.src = item.fileData;
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+              });
+              const localResult = await analyzeOffline(img, localModelPath);
+              
+              if (item.metadata.variety) localResult.variety = item.metadata.variety;
+              if (item.metadata.culture) localResult.culture = item.metadata.culture;
+              
+              await updateDoc(docRef, {
+                ...localResult,
+                status: "completed",
+                analyzedAt: serverTimestamp(),
+              });
+            } catch (error) {
+              console.error("Offline analysis during sync failed, falling back to background processing", error);
+              // Fallback to background analysis
+              const images = [
+                {
+                  base64Image: item.fileData.split(",")[1],
+                  mimeType: item.fileType || "image/jpeg",
+                  dataUrl: item.fileData,
+                },
+              ];
+              runBackgroundAnalysis(docRef.id, images, item.metadata);
+            }
+          } else {
+            // Trigger background analysis
+            const images = [
+              {
+                base64Image: item.fileData.split(",")[1],
+                mimeType: item.fileType || "image/jpeg",
+                dataUrl: item.fileData,
+              },
+            ];
+            runBackgroundAnalysis(docRef.id, images, item.metadata);
+          }
+        }
 
         // Remove from IndexedDB
         await deleteOfflineObservation(item.id);
@@ -3092,7 +3203,7 @@ export default function App() {
 
     // 1. Initial compression / Processing
     const storageImages: { blob: Blob; mimeType: string }[] = [];
-    const aiImages: { base64Image: string; mimeType: string }[] = [];
+    const aiImages: { base64Image: string; mimeType: string; dataUrl?: string }[] = [];
     let tempThumbUrl = "";
 
     const isProcessed = input.length > 0 && "blob" in input[0];
@@ -3122,6 +3233,7 @@ export default function App() {
         aiImages.push({
           base64Image: aiRes.dataUrl.split(",")[1],
           mimeType: res.mimeType,
+          dataUrl: aiRes.dataUrl,
         });
 
         // For Storage (High)
@@ -3138,6 +3250,7 @@ export default function App() {
         aiImages.push({
           base64Image: aiRes.dataUrl.split(",")[1],
           mimeType: file.type,
+          dataUrl: aiRes.dataUrl,
         });
 
         // For Storage (High)
@@ -3158,12 +3271,13 @@ export default function App() {
       let offlineAnalysisResult = null;
 
       // Try local analysis if possible
-      if (isLiteRTReady) {
+      if (isLiteRTReady && aiImages.length > 0) {
         try {
           const img = new Image();
-          img.src = tempThumbUrl;
-          await new Promise((resolve) => {
+          img.src = aiImages[0].dataUrl!;
+          await new Promise((resolve, reject) => {
             img.onload = resolve;
+            img.onerror = reject;
           });
           offlineAnalysisResult = await analyzeOffline(img, localModelPath);
           triggerHaptic("success");
@@ -3190,7 +3304,7 @@ export default function App() {
         fileData: tempThumbUrl, // Store thumb for preview
         fileType: storageImages[0].mimeType,
         capturedAt: new Date().toISOString(),
-        status: "pending",
+        status: offlineAnalysisResult ? "completed" : "pending",
       };
       await saveOfflineObservation(offlineObs);
       setOfflineObservations((prev) => [...prev, offlineObs]);
@@ -3201,7 +3315,7 @@ export default function App() {
       const msg = offlineAnalysisResult
         ? `Analyse locale réussie : ${offlineAnalysisResult.culture}. Enregistré hors-ligne.`
         : "Observation enregistrée localement. L'IA l'analysera à la reconnexion.";
-      alert(msg);
+      notifyUser(msg, "success");
       return;
     }
 
@@ -3319,13 +3433,45 @@ export default function App() {
 
         // 3.3 Run analysis
         try {
-          await runBackgroundAnalysis(
-            docId,
-            aiImages,
-            metadata,
-            analysisTaskId,
-            setBackgroundTasks,
-          );
+          if (forceLocalAnalysis && isLiteRTReady) {
+            console.log("[LiteRT] Running local analysis per user settings (forceLocalAnalysis)...");
+            setBackgroundTasks((prev) =>
+              prev.map((t) => (t.id === analysisTaskId ? { ...t, progress: 40 } : t)),
+            );
+            const img = new Image();
+            img.src = aiImages[0].dataUrl!;
+            await new Promise((resolve, reject) => {
+              img.onload = resolve;
+              img.onerror = reject;
+            });
+            const localResult = await analyzeOffline(img, localModelPath);
+            triggerHaptic("success");
+
+            if (metadata.variety) localResult.variety = metadata.variety;
+            if (metadata.culture) localResult.culture = metadata.culture;
+
+            setBackgroundTasks((prev) =>
+              prev.map((t) => (t.id === analysisTaskId ? { ...t, progress: 80 } : t)),
+            );
+
+            await updateDoc(doc(db, "observations", docId), {
+              ...localResult,
+              imageUrl: storageUrls[0],
+              imageUrls: storageUrls,
+              status: "completed",
+              analyzedAt: serverTimestamp(),
+            });
+
+            notifyUser("Analyse locale Google AI Edge terminée.", "success");
+          } else {
+            await runBackgroundAnalysis(
+              docId,
+              aiImages,
+              metadata,
+              analysisTaskId,
+              setBackgroundTasks,
+            );
+          }
           setBackgroundTasks((prev) =>
             prev.filter((t) => t.id !== analysisTaskId),
           );
@@ -3681,6 +3827,13 @@ export default function App() {
         ...o,
         imageUrl: o.fileData,
         variety: o.metadata.variety || "Captur Hors-ligne",
+        culture: o.metadata.culture || "Inconnue",
+        family: o.metadata.family || "Inconnue",
+        species: o.metadata.species || "Inconnue",
+        phenotypicTraits: o.metadata.offlineAnalysis?.phenotypicTraits || {},
+        organCounts: o.metadata.offlineAnalysis?.organCounts || { flowers: 0, fruits: 0 },
+        domain: o.metadata.domain || "Inconnu",
+        region: o.metadata.region || "Inconnue",
         isOffline: true,
         createdAt: { toDate: () => new Date(o.capturedAt) },
       })),
@@ -4225,11 +4378,6 @@ export default function App() {
             <p className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.1em]">
               AGRONOMIE
             </p>
-            {!isOnline && (
-              <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[8px] font-bold rounded">
-                OFFLINE
-              </span>
-            )}
             {firebaseStatus === "connected" && (
               <span
                 className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"
@@ -4462,6 +4610,14 @@ export default function App() {
 
             {!analysis && (
               <div className="space-y-4">
+                {!isOnline && (
+                  <div className="flex justify-between items-center bg-[#161c18] border border-white/5 p-3 rounded-2xl">
+                    <span className="text-xs font-bold text-slate-300">Mode d'exécution :</span>
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isLiteRTReady && forceLocalAnalysis ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/20 text-amber-400 border border-amber-500/20'}`}>
+                      {isLiteRTReady && forceLocalAnalysis ? 'Offline-Ready' : 'En attente réseau'}
+                    </div>
+                  </div>
+                )}
                 <CameraView
                   onCapture={handleCapture}
                   isOnline={isOnline}
@@ -4470,238 +4626,7 @@ export default function App() {
                   offlineQueueCount={offlineObservations.length}
                 />
 
-                {/* Edge AI Settings - Optimized for Discretion */}
-                <div className="overflow-hidden">
-                  <button
-                    onClick={() => setShowEdgeAISettings(!showEdgeAISettings)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
-                      showEdgeAISettings
-                        ? "bg-slate-900/60 border-emerald-500/30"
-                        : "bg-slate-900/40 border-white/5 opacity-60 hover:opacity-100"
-                    } backdrop-blur-xl group`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-2 h-2 rounded-full ${isLiteRTReady ? "bg-emerald-500 animate-pulse" : isOnline ? "bg-slate-500" : "bg-amber-500 animate-pulse"}`}
-                      />
-                      <div className="text-left">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-emerald-400 transition-colors">
-                          Lab : IA Locale (Mode Offline)
-                        </h3>
-                        <p className="text-[9px] text-slate-500 font-medium">
-                          {isLiteRTReady
-                            ? "Moteur LiteRT prêt • Modèle chargé"
-                            : "Modèle local non détecté (Mode Cloud actif)"}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronDown
-                      size={14}
-                      className={`text-slate-500 transition-transform duration-300 ${showEdgeAISettings ? "rotate-180" : ""}`}
-                    />
-                  </button>
-
-                  <AnimatePresence>
-                    {showEdgeAISettings && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                      >
-                        <div className="mt-2 p-4 bg-slate-900/60 rounded-xl border border-white/5 space-y-4">
-                          {!isLiteRTReady && (
-                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[10px] text-amber-600 dark:text-amber-400 space-y-1">
-                              <p className="font-bold flex items-center gap-1.5">
-                                <Info size={12} className="flex-shrink-0" />
-                                Modèle local non configuré (Facultatif)
-                              </p>
-                              <p className="opacity-95 leading-relaxed font-normal">
-                                Pour analyser vos cultures en plein champ sans
-                                aucune connexion internet, veuillez placer le
-                                fichier modèle{" "}
-                                <span className="font-mono bg-amber-500/5 px-1 py-0.5 rounded font-semibold text-emerald-600 dark:text-emerald-400">
-                                  efficientnet_lite0.tflite
-                                </span>{" "}
-                                dans le dossier{" "}
-                                <span className="font-mono bg-amber-500/5 px-1 py-0.5 rounded font-semibold text-emerald-600 dark:text-emerald-400">
-                                  /public/assets/models/
-                                </span>
-                                . Lorsque l'appareil est connecté à internet,
-                                AgriScan utilise automatiquement les modèles
-                                distants sécurisés sous Gemini.
-                              </p>
-                            </div>
-                          )}
-
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block ml-1">
-                              Choix du modèle (4 experts)
-                            </label>
-                            <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                              {[
-                                {
-                                  name: "MobileNetV3-Small",
-                                  desc: "ULTRA-FAIBLE",
-                                  path: "/assets/models/mobilenetv3_small.tflite",
-                                },
-                                {
-                                  name: "MobileNetV3-Large",
-                                  desc: "TRÈS FAIBLE",
-                                  path: "/assets/models/mobilenetv3_large.tflite",
-                                },
-                                {
-                                  name: "MobileNetV2",
-                                  desc: "FAIBLE",
-                                  path: "/assets/models/mobilenetv2.tflite",
-                                },
-                                {
-                                  name: "EfficientNet Lite0",
-                                  desc: "PRÉCIS",
-                                  path: "/assets/models/efficientnet_lite0.tflite",
-                                },
-                              ].map((m) => (
-                                <button
-                                  key={m.path}
-                                  onClick={() => updateLocalModel(m.path)}
-                                  className={`flex-none px-3 py-2 rounded-lg text-[10px] font-bold transition-all border flex flex-col items-center gap-0.5 ${
-                                    localModelPath === m.path
-                                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)]"
-                                      : "bg-white/5 border-white/5 text-slate-500 hover:bg-white/10"
-                                  }`}
-                                >
-                                  <span>{m.name}</span>
-                                  <span className="text-[8px] opacity-60 font-medium uppercase tracking-tighter">
-                                    {m.desc}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block ml-1">
-                              Chemin personnalisé
-                            </label>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                value={localModelPath}
-                                onChange={(e) =>
-                                  updateLocalModel(e.target.value)
-                                }
-                                placeholder="ex: /assets/models/mon_modele.tflite"
-                                className="w-full bg-[#0d120f] border border-white/5 rounded-xl px-3 py-2.5 text-[10px] font-mono text-emerald-400 focus:outline-none focus:border-emerald-500/30 transition-all shadow-inner"
-                              />
-                              <p className="mt-1 text-[9px] text-slate-500 italic pl-1 flex items-center gap-1">
-                                <Info size={10} /> Les fichiers doivent être
-                                dans{" "}
-                                <span className="text-emerald-500/70">
-                                  /public/assets/models/
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Clé API Gemini de secours */}
-                          <div className="border-t border-white/5 my-4 pt-4 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <label className="text-[9px] font-bold text-blue-400 uppercase tracking-wider block ml-1 flex items-center gap-1.5">
-                                <Key size={12} className="text-blue-400" />
-                                Clé API Gemini de Secours (Optionnelle)
-                              </label>
-                              {customGeminiKey && (
-                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold uppercase tracking-widest animate-pulse">
-                                  {isKeyHidden ? "Mode Direct Actif & Sécurisé" : "Mode Direct Actif"}
-                                </span>
-                              )}
-                            </div>
-
-                            {isKeyHidden && customGeminiKey ? (
-                              /* Clé API enregistrée et masquée pour la sécurité */
-                              <div className="bg-emerald-500/5 dark:bg-[#09100c] border border-emerald-500/20 dark:border-emerald-500/25 rounded-2xl p-4 text-center space-y-3 shadow-inner">
-                                <div className="mx-auto w-10 h-10 bg-emerald-100 dark:bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                                  <Lock size={16} className="animate-pulse" />
-                                </div>
-                                <div className="space-y-1">
-                                  <h4 className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                                    Clé API Enregistrée & Masquée
-                                  </h4>
-                                  <p className="text-[9px] text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                                    Votre clé API est enregistrée et masquée localement pour empêcher tout accès visuel ou toute modification accidentelle.
-                                  </p>
-                                </div>
-                                <div className="flex items-center justify-center gap-3 pt-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsKeyHidden(false)}
-                                    className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 text-[9px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-all flex items-center gap-1.5"
-                                  >
-                                    <Edit2 size={10} /> Modifier la clé
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      handleUpdateGeminiKey("");
-                                      setIsKeyHidden(false);
-                                    }}
-                                    className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/10 text-[9px] font-bold text-red-600 dark:text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all flex items-center gap-1.5"
-                                  >
-                                    <Trash2 size={10} /> Supprimer la clé
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              /* Mode de saisie de la clé */
-                              <>
-                                <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
-                                  Si vous rencontrez des erreurs de réponse HTML (notamment hébergé sur Vercel avec le proxy), saisissez votre propre Clé API Gemini ici. L'application communiquera directement avec l'API Google, en contournant le serveur de l'application.
-                                </p>
-                                <div className="relative">
-                                  <input
-                                    type={showApiKey ? "text" : "password"}
-                                    value={customGeminiKey}
-                                    onChange={(e) => {
-                                      handleUpdateGeminiKey(e.target.value);
-                                    }}
-                                    placeholder="Collez votre clé API Gemini (AIzaSy...)"
-                                    className="w-full bg-slate-100 focus:bg-white dark:bg-[#0d120f] border border-slate-200 dark:border-white/5 rounded-xl pl-3 pr-10 py-2.5 text-[10px] font-mono text-slate-800 dark:text-blue-400 placeholder-slate-450 dark:placeholder-slate-650 focus:outline-none focus:border-blue-500/30 transition-all shadow-inner"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => setShowApiKey(!showApiKey)}
-                                    className="absolute right-3 top-2.5 w-6 h-6 rounded-lg bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-                                  >
-                                    {showApiKey ? <EyeOff size={12} /> : <Eye size={12} />}
-                                  </button>
-                                </div>
-                                {customGeminiKey && (
-                                  <div className="flex items-center justify-between gap-2 pt-1 font-semibold">
-                                    <button
-                                      type="button"
-                                      onClick={() => setIsKeyHidden(true)}
-                                      className="w-full px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-650 dark:text-emerald-400 uppercase tracking-widest hover:bg-emerald-500/20 dark:hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5"
-                                    >
-                                      <Lock size={12} /> Enregistrer & Masquer
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleUpdateGeminiKey("")}
-                                      className="px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/10 text-[9px] font-bold text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all flex items-center justify-center gap-1"
-                                      title="Supprimer la clé"
-                                    >
-                                      <Trash2 size={12} />
-                                    </button>
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                {/* Google AI Edge Dashboard runs in the background */}
               </div>
             )}
 
@@ -5730,14 +5655,6 @@ export default function App() {
                 ))
               )}
             </div>
-            {filteredObservations.length === 0 && (
-              <div className="text-center py-12">
-                <Search size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-500 text-sm">
-                  Aucun rsultat ne correspond vos critères.
-                </p>
-              </div>
-            )}
           </motion.div>
         )}
 
