@@ -2289,26 +2289,39 @@ export default function App() {
       let locRegion = "";
 
       if (query) {
-        const geoRes = await fetch(
-          `/api/weather/geocode?name=${encodeURIComponent(query)}`,
-        ).catch((e) => {
-          console.error("Fetch error geocode:", e);
-          throw new Error(
-            `Impossible de contacter le service de géocodage: ${e.message}`,
-          );
-        });
-
-        if (!geoRes.ok) {
-          const errData = await geoRes.json().catch(() => ({}));
-          throw new Error(
-            errData.error || `Erreur géocodage (${geoRes.status})`,
-          );
+        let geoData = null;
+        try {
+          // Essayons d'abord directement depuis le client pour éviter le blocage IP de Vercel par Open-Meteo
+          const directRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=fr&format=json`);
+          if (directRes.ok) {
+            geoData = await directRes.json();
+          }
+        } catch (e) {
+          console.warn("Direct geocoding failed, falling back to proxy", e);
         }
-        const geoData = await geoRes.json().catch(() => {
-          throw new Error("Réponse de géocodage invalide");
-        });
 
-        if (geoData.results && geoData.results.length > 0) {
+        if (!geoData || !geoData.results) {
+          const geoRes = await fetch(
+            `/api/weather/geocode?name=${encodeURIComponent(query)}`,
+          ).catch((e) => {
+            console.error("Fetch error geocode proxy:", e);
+            throw new Error(
+              `Impossible de contacter le service de géocodage: ${e.message}`,
+            );
+          });
+
+          if (!geoRes.ok) {
+            const errData = await geoRes.json().catch(() => ({}));
+            throw new Error(
+              errData.error || `Erreur géocodage (${geoRes.status})`,
+            );
+          }
+          geoData = await geoRes.json().catch(() => {
+            throw new Error("Réponse de géocodage invalide");
+          });
+        }
+
+        if (geoData && geoData.results && geoData.results.length > 0) {
           locationLat = geoData.results[0].latitude;
           locationLng = geoData.results[0].longitude;
           locName = geoData.results[0].name;
@@ -2328,22 +2341,37 @@ export default function App() {
         return;
       }
 
-      const weatherRes = await fetch(
-        `/api/weather/forecast?lat=${locationLat}&lng=${locationLng}`,
-      ).catch((e) => {
-        console.error("Fetch error weather:", e);
-        throw new Error(
-          `Impossible de contacter le service météo: ${e.message}`,
-        );
-      });
-
-      if (!weatherRes.ok) {
-        const errData = await weatherRes.json().catch(() => ({}));
-        throw new Error(errData.error || `Erreur météo (${weatherRes.status})`);
+      let weatherData = null;
+      try {
+        const directRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${locationLat}&longitude=${locationLng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,precipitation,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,et0_fao_evapotranspiration,shortwave_radiation_sum,uv_index_max&past_days=31&forecast_days=16&timezone=auto`);
+        if (directRes.ok) {
+          weatherData = await directRes.json();
+          // Adding extras empty obj since it's direct
+          weatherData.extras = {};
+          weatherData.isFallback = false;
+        }
+      } catch (e) {
+        console.warn("Direct forecast failed, falling back to proxy", e);
       }
-      const weatherData = await weatherRes.json().catch(() => {
-        throw new Error("Réponse météo invalide");
-      });
+
+      if (!weatherData || !weatherData.daily) {
+        const weatherRes = await fetch(
+          `/api/weather/forecast?lat=${locationLat}&lng=${locationLng}`,
+        ).catch((e) => {
+          console.error("Fetch error weather proxy:", e);
+          throw new Error(
+            `Impossible de contacter le service météo: ${e.message}`,
+          );
+        });
+
+        if (!weatherRes.ok) {
+          const errData = await weatherRes.json().catch(() => ({}));
+          throw new Error(errData.error || `Erreur météo (${weatherRes.status})`);
+        }
+        weatherData = await weatherRes.json().catch(() => {
+          throw new Error("Réponse météo invalide");
+        });
+      }
 
       if (!weatherData || !weatherData.daily) {
         throw new Error("Données météo incomplètes reçues de l'API");
