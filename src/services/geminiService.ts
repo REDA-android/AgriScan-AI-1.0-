@@ -43,12 +43,16 @@ export function clearAIInstance() {
 }
 
 const getApiUrl = () => {
-  // Always use the relative proxy if on the same origin. On native mobile (Capacitor), fallback to the hosted server URL.
+  // Always use the relative proxy if on the same origin.
+  // On native mobile (Capacitor), try to use the configured VITE_API_URL or a dynamic fallback.
   const baseUrl =
     import.meta.env.VITE_API_URL ||
     (Capacitor.isNativePlatform()
-      ? "https://ais-pre-db2hwm5y7qoqk2tm5yejt5-52640628825.europe-west2.run.app"
+      ? "https://ais-dev-db2hwm5y7qoqk2tm5yejt5-52640628825.europe-west2.run.app"
       : window.location.origin);
+  
+  // If the origin is 'capacitor://localhost' or 'http://localhost', we MUST have a VITE_API_URL
+  // otherwise we fallback to the dev server URL.
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 };
 

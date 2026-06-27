@@ -2285,7 +2285,7 @@ export default function App() {
     const backendBaseUrl =
       import.meta.env.VITE_API_URL ||
       (Capacitor.isNativePlatform()
-        ? "https://ais-pre-db2hwm5y7qoqk2tm5yejt5-52640628825.europe-west2.run.app"
+        ? "https://ais-dev-db2hwm5y7qoqk2tm5yejt5-52640628825.europe-west2.run.app"
         : window.location.origin);
 
     try {
