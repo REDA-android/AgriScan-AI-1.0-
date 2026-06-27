@@ -23,7 +23,9 @@ import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 // Initialisation native de GoogleAuth pour Capacitor
 if (Capacitor.isNativePlatform()) {
-  GoogleAuth.initialize();
+  GoogleAuth.initialize({
+    clientId: '969613404131-ah3fjr02qib6tgfuvpgjak6k39kdjvjp.apps.googleusercontent.com',
+  });
 }
 
 // Import the Firebase configuration

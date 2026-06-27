@@ -439,7 +439,7 @@ function ObservationDetail({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-[#161c18] flex flex-col"
+      className="fixed inset-0 z-[5000] bg-[#161c18] flex flex-col"
       dir={isArabic ? "rtl" : "ltr"}
     >
       <header className="px-4 pb-4 pt-[calc(1rem+env(safe-area-inset-top))] border-b border-white/5 flex items-center gap-4 sticky top-0 bg-[#161c18] z-10">
@@ -5753,7 +5753,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4"
+            className="fixed inset-0 z-[6000] bg-black flex flex-col items-center justify-center p-4"
           >
             <button
               onClick={() => setSelectedImage(null)}
@@ -5795,7 +5795,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[4500] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}

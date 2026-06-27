@@ -66,7 +66,7 @@ export const ChatBot: React.FC = () => {
 
       {/* Chat Window */}
       <div 
-        className={`fixed inset-0 md:inset-auto md:bottom-6 md:right-6 w-full md:w-[400px] h-[100dvh] md:h-[600px] bg-[#0d120f] md:rounded-3xl border-0 md:border border-white/10 shadow-2xl flex flex-col transition-transform origin-bottom-right z-[100] overflow-hidden ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 md:inset-auto md:bottom-6 md:right-6 w-full md:w-[400px] h-[100dvh] md:h-[600px] bg-[#0d120f] md:rounded-3xl border-0 md:border border-white/10 shadow-2xl flex flex-col transition-transform origin-bottom-right z-[4000] overflow-hidden ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
       >
         {/* Header */}
         <div className="bg-[#161c18] p-4 pt-[calc(1rem+env(safe-area-inset-top))] md:pt-4 border-b border-white/5 flex items-center justify-between shrink-0">
