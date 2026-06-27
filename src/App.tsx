@@ -2282,6 +2282,12 @@ export default function App() {
   const fetchWeather = async (lat?: number, lng?: number, query?: string) => {
     if (isWeatherLoading) return;
     setIsWeatherLoading(true);
+    const backendBaseUrl =
+      import.meta.env.VITE_API_URL ||
+      (Capacitor.isNativePlatform()
+        ? "https://ais-pre-db2hwm5y7qoqk2tm5yejt5-52640628825.europe-west2.run.app"
+        : window.location.origin);
+
     try {
       let locationLat = lat;
       let locationLng = lng;
@@ -2302,7 +2308,7 @@ export default function App() {
 
         if (!geoData || !geoData.results) {
           const geoRes = await fetch(
-            `/api/weather/geocode?name=${encodeURIComponent(query)}`,
+            `${backendBaseUrl}/api/weather/geocode?name=${encodeURIComponent(query)}`,
           ).catch((e) => {
             console.error("Fetch error geocode proxy:", e);
             throw new Error(
@@ -2356,7 +2362,7 @@ export default function App() {
 
       if (!weatherData || !weatherData.daily) {
         const weatherRes = await fetch(
-          `/api/weather/forecast?lat=${locationLat}&lng=${locationLng}`,
+          `${backendBaseUrl}/api/weather/forecast?lat=${locationLat}&lng=${locationLng}`,
         ).catch((e) => {
           console.error("Fetch error weather proxy:", e);
           throw new Error(

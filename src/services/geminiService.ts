@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { Capacitor } from "@capacitor/core";
 
 export interface PlantAnalysis {
   family: string;
@@ -42,8 +43,12 @@ export function clearAIInstance() {
 }
 
 const getApiUrl = () => {
-  // Always use the relative proxy if on the same origin
-  const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
+  // Always use the relative proxy if on the same origin. On native mobile (Capacitor), fallback to the hosted server URL.
+  const baseUrl =
+    import.meta.env.VITE_API_URL ||
+    (Capacitor.isNativePlatform()
+      ? "https://ais-pre-db2hwm5y7qoqk2tm5yejt5-52640628825.europe-west2.run.app"
+      : window.location.origin);
   return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 };
 
