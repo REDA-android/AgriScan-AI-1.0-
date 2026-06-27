@@ -2462,13 +2462,24 @@ export default function App() {
     if (user) {
       const fetchLocationAndWeather = async () => {
         try {
-          const { Geolocation } = await import("@capacitor/geolocation");
-          // Try with low accuracy and cached first to avoid startup prompt/delays on Android if it's struggling
-          const pos = await Geolocation.getCurrentPosition({
-            timeout: 10000,
-            enableHighAccuracy: false,
-            maximumAge: 300000,
-          });
+          let pos: { coords: { latitude: number; longitude: number } };
+          if (Capacitor.isNativePlatform()) {
+            const { Geolocation } = await import("@capacitor/geolocation");
+            pos = await Geolocation.getCurrentPosition({
+              timeout: 10000,
+              enableHighAccuracy: false,
+              maximumAge: 300000,
+            });
+          } else {
+            pos = await new Promise((resolve, reject) => {
+              if (!navigator.geolocation) return reject(new Error("Géolocalisation non supportée"));
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                timeout: 10000,
+                enableHighAccuracy: false,
+                maximumAge: 300000,
+              });
+            });
+          }
           fetchWeather(pos.coords.latitude, pos.coords.longitude);
         } catch (err) {
           console.warn("Geolocation failed/denied, defaulting to Paris", err);
@@ -5164,30 +5175,39 @@ export default function App() {
                 <button
                   onClick={async () => {
                     try {
-                      const { Geolocation } =
-                        await import("@capacitor/geolocation");
-                      let check = await Geolocation.checkPermissions();
-                      if (check.location !== "granted") {
-                        check = await Geolocation.requestPermissions();
-                        if (check.location === "denied") {
-                          alert(
-                            "Permission de localisation refusée. Activez-la dans les paramètres de votre appareil.",
-                          );
-                          return;
+                      let pos: { coords: { latitude: number; longitude: number } };
+                      if (Capacitor.isNativePlatform()) {
+                        const { Geolocation } = await import("@capacitor/geolocation");
+                        let check = await Geolocation.checkPermissions();
+                        if (check.location !== "granted") {
+                          check = await Geolocation.requestPermissions();
+                          if (check.location === "denied") {
+                            alert(
+                              "Permission de localisation refusée. Activez-la dans les paramètres de votre appareil.",
+                            );
+                            return;
+                          }
                         }
-                      }
 
-                      let pos;
-                      try {
-                        pos = await Geolocation.getCurrentPosition({
-                          timeout: 10000,
-                          enableHighAccuracy: true,
-                        });
-                      } catch (e) {
-                        pos = await Geolocation.getCurrentPosition({
-                          timeout: 10000,
-                          enableHighAccuracy: false,
-                          maximumAge: 300000,
+                        try {
+                          pos = await Geolocation.getCurrentPosition({
+                            timeout: 10000,
+                            enableHighAccuracy: true,
+                          });
+                        } catch (e) {
+                          pos = await Geolocation.getCurrentPosition({
+                            timeout: 10000,
+                            enableHighAccuracy: false,
+                            maximumAge: 300000,
+                          });
+                        }
+                      } else {
+                        pos = await new Promise((resolve, reject) => {
+                          if (!navigator.geolocation) return reject(new Error("Géolocalisation non supportée"));
+                          navigator.geolocation.getCurrentPosition(resolve, reject, {
+                            timeout: 10000,
+                            enableHighAccuracy: true,
+                          });
                         });
                       }
                       fetchWeather(pos.coords.latitude, pos.coords.longitude);

@@ -3,6 +3,7 @@ import 'leaflet/dist/leaflet.css';
 import { Search, Filter, X, MapPin } from 'lucide-react';
 import { useState, useMemo, FormEvent, useEffect } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 
 // Fix for default marker icons in Leaflet with React
 const DefaultIcon = L.icon({
@@ -62,22 +63,36 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
   const [mapZoom, setMapZoom] = useState<number>(zoom);
   const [overlayType, setOverlayType] = useState<'none' | 'health' | 'density'>('none');
   const [isSearching, setIsSearching] = useState(false);
-  const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'satellite-alt'>('standard');
 
   useEffect(() => {
     const fetchLocation = async () => {
       try {
-        const { Geolocation } = await import('@capacitor/geolocation');
-        let check = await Geolocation.checkPermissions();
-        if (check.location !== 'granted') {
-          check = await Geolocation.requestPermissions();
-        }
+        let position: { coords: { latitude: number; longitude: number } };
+        
+        // Import Capacitor dynamically, but we still need to know if we are on a native platform
+        const { Capacitor } = await import('@capacitor/core');
+        
+        if (Capacitor.isNativePlatform()) {
+          const { Geolocation } = await import('@capacitor/geolocation');
+          let check = await Geolocation.checkPermissions();
+          if (check.location !== 'granted') {
+            check = await Geolocation.requestPermissions();
+          }
 
-        let position;
-        try {
-          position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
-        } catch (error) {
-          position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+          try {
+            position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+          } catch (error) {
+            position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+          }
+        } else {
+          position = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) return reject(new Error("Géolocalisation non supportée"));
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 10000,
+              enableHighAccuracy: true,
+            });
+          });
         }
         
         setMapCenter([position.coords.latitude, position.coords.longitude]);
@@ -195,6 +210,12 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
             >
               Satellite
             </button>
+            <button 
+              onClick={() => setMapType('satellite-alt')}
+              className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase transition-all whitespace-nowrap ${mapType === 'satellite-alt' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:bg-white/5'}`}
+            >
+              Sat (Secours)
+            </button>
           </div>
 
           <div className="h-8 w-px bg-white/10 mx-1"></div>
@@ -250,6 +271,11 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+          ) : mapType === 'satellite-alt' ? (
+            <TileLayer
+              attribution='&copy; Google'
+              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+            />
           ) : (
             <>
               <TileLayer
@@ -262,39 +288,41 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
               />
             </>
           )}
-          {filteredMarkers.map((marker) => (
-            <Marker 
-              key={marker.id} 
-              position={[marker.lat, marker.lng]}
-              icon={overlayType === 'none' ? DefaultIcon : createCustomIcon(getMarkerColor(marker))}
-              eventHandlers={{
-                click: () => {
-                  if (onMarkerClick) onMarkerClick(marker);
-                }
-              }}
-            >
-              <Popup>
-                <div className="p-1 min-w-[120px]">
-                  <h3 className="font-bold text-emerald-400 text-sm">{marker.name}</h3>
-                  <p className="text-[10px] text-slate-400 font-medium">{marker.variety}</p>
-                  <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
-                    {marker.domain && <p className="text-[10px] text-emerald-400 flex items-center gap-1"><MapPin size={10} /> {marker.domain}</p>}
-                    {marker.healthStatus && (
-                      <p className="text-[10px] flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getMarkerColor(marker) }}></span>
-                        Santé: <span className="font-bold">{marker.healthStatus}</span>
-                      </p>
-                    )}
-                    {marker.density && (
-                      <p className="text-[10px] text-slate-400">
-                        Densité: <span className="font-bold text-slate-300">{marker.density}</span>
-                      </p>
-                    )}
+          <MarkerClusterGroup chunkedLoading>
+            {filteredMarkers.map((marker) => (
+              <Marker 
+                key={marker.id} 
+                position={[marker.lat, marker.lng]}
+                icon={overlayType === 'none' ? DefaultIcon : createCustomIcon(getMarkerColor(marker))}
+                eventHandlers={{
+                  click: () => {
+                    if (onMarkerClick) onMarkerClick(marker);
+                  }
+                }}
+              >
+                <Popup>
+                  <div className="p-1 min-w-[120px]">
+                    <h3 className="font-bold text-emerald-400 text-sm">{marker.name}</h3>
+                    <p className="text-[10px] text-slate-400 font-medium">{marker.variety}</p>
+                    <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
+                      {marker.domain && <p className="text-[10px] text-emerald-400 flex items-center gap-1"><MapPin size={10} /> {marker.domain}</p>}
+                      {marker.healthStatus && (
+                        <p className="text-[10px] flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getMarkerColor(marker) }}></span>
+                          Santé: <span className="font-bold">{marker.healthStatus}</span>
+                        </p>
+                      )}
+                      {marker.density && (
+                        <p className="text-[10px] text-slate-400">
+                          Densité: <span className="font-bold text-slate-300">{marker.density}</span>
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+                </Popup>
+              </Marker>
+            ))}
+          </MarkerClusterGroup>
         </MapContainer>
         
         {/* Legend for Overlays */}

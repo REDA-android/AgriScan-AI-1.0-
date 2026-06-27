@@ -165,17 +165,29 @@ export default function CameraView({ onCapture, isOnline, onOpenMapPicker, manua
   useEffect(() => {
     const fetchLocation = async () => {
       try {
-        const { Geolocation } = await import('@capacitor/geolocation');
-        let check = await Geolocation.checkPermissions();
-        if (check.location !== 'granted') {
-          check = await Geolocation.requestPermissions();
-        }
+        let position: { coords: { latitude: number; longitude: number } };
+        const { Capacitor } = await import('@capacitor/core');
 
-        let position;
-        try {
-          position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
-        } catch (error) {
-          position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+        if (Capacitor.isNativePlatform()) {
+          const { Geolocation } = await import('@capacitor/geolocation');
+          let check = await Geolocation.checkPermissions();
+          if (check.location !== 'granted') {
+            check = await Geolocation.requestPermissions();
+          }
+
+          try {
+            position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+          } catch (error) {
+            position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+          }
+        } else {
+          position = await new Promise((resolve, reject) => {
+            if (!navigator.geolocation) return reject(new Error("Géolocalisation non supportée"));
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 10000,
+              enableHighAccuracy: true,
+            });
+          });
         }
 
         // Only set GPS if we haven't already set EXIF location
