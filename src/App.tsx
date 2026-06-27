@@ -3371,11 +3371,11 @@ export default function App() {
         userId: user.uid,
         domain: metadata.domain || "",
         location: {
-          lat: metadata.lat || 48.8566,
-          lng: metadata.lng || 2.3522,
+          lat: metadata.lat ?? 48.8566,
+          lng: metadata.lng ?? 2.3522,
         },
         createdAt: serverTimestamp(),
-        capturedAt: metadata.date || new Date().toISOString(),
+        capturedAt: metadata.date ?? new Date().toISOString(),
         imageUrl: tempThumbUrl, // Use temp thumb until upload completes
         imageUrls: [tempThumbUrl],
         culture: metadata.culture || "En attente...",
@@ -5266,18 +5266,20 @@ export default function App() {
             className="h-full flex flex-col"
           >
             <MapView
-              markers={observations.map((o) => ({
-                id: o.id,
-                lat: o.location.lat,
-                lng: o.location.lng,
-                name: o.variety,
-                variety: o.species,
-                family: o.family,
-                domain: o.domain,
-                density: o.density,
-                healthStatus: o.phenotypicTraits?.healthStatus,
-                fullData: o,
-              }))}
+              markers={observations
+                .filter(o => o.location && typeof o.location.lat === 'number' && typeof o.location.lng === 'number')
+                .map((o) => ({
+                  id: o.id,
+                  lat: o.location.lat,
+                  lng: o.location.lng,
+                  name: o.variety || "Observation",
+                  variety: o.species || "Espèce inconnue",
+                  family: o.family,
+                  domain: o.domain,
+                  density: o.density,
+                  healthStatus: o.phenotypicTraits?.healthStatus,
+                  fullData: o,
+                }))}
               onMarkerClick={(marker) =>
                 setSelectedObservation(marker.fullData)
               }

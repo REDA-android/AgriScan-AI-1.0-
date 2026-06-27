@@ -65,6 +65,14 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
   const [isSearching, setIsSearching] = useState(false);
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'satellite-alt'>('standard');
 
+  // Center on first marker if available and no user location yet
+  useEffect(() => {
+    if (markers.length > 0 && mapCenter[0] === center[0] && mapCenter[1] === center[1]) {
+      setMapCenter([markers[0].lat, markers[0].lng]);
+      setMapZoom(10);
+    }
+  }, [markers, center]);
+
   useEffect(() => {
     const fetchLocation = async () => {
       try {
@@ -244,6 +252,22 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
           <div className="h-8 w-px bg-white/10 mx-1"></div>
 
           <button 
+            onClick={() => {
+              if (markers.length > 0) {
+                setMapCenter([markers[0].lat, markers[0].lng]);
+                setMapZoom(12);
+              }
+            }}
+            className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all bg-[#161c18] text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/10`}
+          >
+            <div className="flex items-center gap-1">
+              <MapPin size={10} /> Recalibrer sur Obs.
+            </div>
+          </button>
+
+          <div className="h-8 w-px bg-white/10 mx-1"></div>
+
+          <button 
             onClick={() => setSelectedFamily(null)}
             className={`px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider whitespace-nowrap shadow-md transition-all ${!selectedFamily ? 'bg-emerald-600 text-emerald-50' : 'bg-[#161c18] text-slate-400 border border-white/5'}`}
           >
@@ -288,41 +312,40 @@ export default function MapView({ markers, center = [48.8566, 2.3522], zoom = 5,
               />
             </>
           )}
-          <MarkerClusterGroup chunkedLoading>
-            {filteredMarkers.map((marker) => (
-              <Marker 
-                key={marker.id} 
-                position={[marker.lat, marker.lng]}
-                icon={overlayType === 'none' ? DefaultIcon : createCustomIcon(getMarkerColor(marker))}
-                eventHandlers={{
-                  click: () => {
-                    if (onMarkerClick) onMarkerClick(marker);
-                  }
-                }}
-              >
-                <Popup>
-                  <div className="p-1 min-w-[120px]">
-                    <h3 className="font-bold text-emerald-400 text-sm">{marker.name}</h3>
-                    <p className="text-[10px] text-slate-400 font-medium">{marker.variety}</p>
-                    <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
-                      {marker.domain && <p className="text-[10px] text-emerald-400 flex items-center gap-1"><MapPin size={10} /> {marker.domain}</p>}
-                      {marker.healthStatus && (
-                        <p className="text-[10px] flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getMarkerColor(marker) }}></span>
-                          Santé: <span className="font-bold">{marker.healthStatus}</span>
-                        </p>
-                      )}
-                      {marker.density && (
-                        <p className="text-[10px] text-slate-400">
-                          Densité: <span className="font-bold text-slate-300">{marker.density}</span>
-                        </p>
-                      )}
-                    </div>
+          {/* Remove MarkerClusterGroup if it causes issues with React 19/Leaflet 5 */}
+          {filteredMarkers.map((marker) => (
+            <Marker 
+              key={marker.id} 
+              position={[marker.lat, marker.lng]}
+              icon={overlayType === 'none' ? DefaultIcon : createCustomIcon(getMarkerColor(marker))}
+              eventHandlers={{
+                click: () => {
+                  if (onMarkerClick) onMarkerClick(marker);
+                }
+              }}
+            >
+              <Popup>
+                <div className="p-1 min-w-[120px]">
+                  <h3 className="font-bold text-emerald-400 text-sm">{marker.name}</h3>
+                  <p className="text-[10px] text-slate-400 font-medium">{marker.variety}</p>
+                  <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
+                    {marker.domain && <p className="text-[10px] text-emerald-400 flex items-center gap-1"><MapPin size={10} /> {marker.domain}</p>}
+                    {marker.healthStatus && (
+                      <p className="text-[10px] flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getMarkerColor(marker) }}></span>
+                        Santé: <span className="font-bold">{marker.healthStatus}</span>
+                      </p>
+                    )}
+                    {marker.density && (
+                      <p className="text-[10px] text-slate-400">
+                        Densité: <span className="font-bold text-slate-300">{marker.density}</span>
+                      </p>
+                    )}
                   </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MarkerClusterGroup>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
         </MapContainer>
         
         {/* Legend for Overlays */}
