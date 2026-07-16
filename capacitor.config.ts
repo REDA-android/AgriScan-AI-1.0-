@@ -1,24 +1,16 @@
-import type { CapacitorConfig } from "@capacitor/cli";
+import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: "com.agroscan.ia",
-  appName: "AgroScan IA",
-  webDir: "dist",
+  appId: 'com.agroscan.ia',
+  appName: 'AgroScan IA',
+  webDir: 'dist',
+  bundledWebRuntime: false,
   server: {
-    androidScheme: "https",
-    hostname: "localhost",
-    cleartext: true,
+    androidScheme: 'https'
   },
-  android: {
-    resolveServiceWorkerRequests: false
-  },
-  plugins: {
-    GoogleAuth: {
-      scopes: ["profile", "email"],
-      serverClientId: "969613404131-ah3fjr02qib6tgfuvpgjak6k39kdjvjp.apps.googleusercontent.com",
-      forceCodeForRefreshToken: true,
-    },
-  },
+  ios: {
+    contentInset: 'always'
+  }
 };
 
 export default config;

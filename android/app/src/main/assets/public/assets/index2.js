@@ -1,2 +1,2 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web.js","assets/index.js","assets/index.css"])))=>i.map(i=>d[i]);
-import{r as p,_ as r}from"./index.js";const _=p("App",{web:()=>r(()=>import("./web.js"),__vite__mapDeps([0,1,2])).then(e=>new e.AppWeb)});export{_ as App};
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["./web.js","./index.js","./index.css"])))=>i.map(i=>d[i]);
+import{r,_ as p}from"./index.js";const o=r("App",{web:()=>p(()=>import("./web.js"),__vite__mapDeps([0,1,2]),import.meta.url).then(e=>new e.AppWeb)});export{o as App};

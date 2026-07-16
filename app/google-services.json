@@ -8,12 +8,20 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:969613404131:android:e72a2eae5b4348657962d6",
+        "mobilesdk_app_id": "1:969613404131:android:b4a440ea9e288c3f7962d6",
         "android_client_info": {
           "package_name": "com.agroscan.ia"
         }
       },
       "oauth_client": [
+        {
+          "client_id": "969613404131-rktot6c141dv05beng2bgano8qco97kg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.agroscan.ia",
+            "certificate_hash": "95fa2b26591329223cc347479b381028202a9a6d"
+          }
+        },
         {
           "client_id": "969613404131-ah3fjr02qib6tgfuvpgjak6k39kdjvjp.apps.googleusercontent.com",
           "client_type": 3

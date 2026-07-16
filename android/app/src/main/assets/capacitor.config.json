@@ -7,16 +7,13 @@
 		"hostname": "localhost",
 		"cleartext": true
 	},
-	"android": {
-		"resolveServiceWorkerRequests": false
-	},
 	"plugins": {
 		"GoogleAuth": {
 			"scopes": [
 				"profile",
 				"email"
 			],
-			"serverClientId": "969613404131-ah3fjr02qib6tgfuvpgjak6k39kdjvjp.apps.googleusercontent.com",
+			"serverClientId": "VOTRE_ID_WEB_FIREBASE.apps.googleusercontent.com",
 			"forceCodeForRefreshToken": true
 		}
 	}

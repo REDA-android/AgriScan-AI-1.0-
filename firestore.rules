@@ -6,7 +6,7 @@ service cloud.firestore {
     // Assumed Data Model
     // ===============================================================
     // Collection: users
-    // Fields: uid, displayName, email, role, createdAt
+    // Fields: uid, displayName, email, role, accessStatus, createdAt
     
     // Collection: observations
     // Fields: userId, imageUrl, family, species, variety, location, phenotypicTraits, userNotes, createdAt
@@ -21,10 +21,14 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isAdminByEmail(token) {
+      return token != null && 'email' in token && (token.email == "relkrouchni@gmail.com" || token.email == "elkrouchni@gmail.com");
+    }
+
     function isApproved() {
       return isAuthenticated() && 
         (
-          ('email' in request.auth.token && (request.auth.token.email == "relkrouchni@gmail.com" || request.auth.token.email == "elkrouchni@gmail.com")) || 
+          isAdminByEmail(request.auth.token) || 
           (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accessStatus == 'approved')
         );
@@ -33,16 +37,16 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (
-          ('email' in request.auth.token && (request.auth.token.email == "relkrouchni@gmail.com" || request.auth.token.email == "elkrouchni@gmail.com")) || 
+          isAdminByEmail(request.auth.token) || 
           (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
         );
     }
 
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email', 'role', 'accessStatus']) &&
+      return data.keys().hasAll(['uid', 'role', 'accessStatus']) &&
              data.uid is string &&
-             data.email is string &&
+             (!('email' in data) || data.email == null || data.email is string) &&
              data.role in ['owner', 'user', 'viewer', 'admin'] &&
              data.accessStatus in ['pending', 'approved', 'rejected'];
     }
@@ -61,11 +65,17 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      // New users can create their profile as 'pending' and 'viewer' (default)
+      // New users can create their profile
       allow create: if isAuthenticated() && isOwner(userId) && 
                       isValidUser(request.resource.data) && 
-                      request.resource.data.role == 'viewer' &&
-                      (request.resource.data.accessStatus == 'pending' || (request.auth.token.firebase.sign_in_provider == 'anonymous' && request.resource.data.accessStatus == 'approved'));
+                      (
+                        // Admin emails can register directly as admin & approved
+                        (isAdminByEmail(request.auth.token) && request.resource.data.role == 'admin' && request.resource.data.accessStatus == 'approved') ||
+                        // Anonymous users can register directly as user & approved
+                        (request.auth.token.firebase.sign_in_provider == 'anonymous' && request.resource.data.role == 'user' && request.resource.data.accessStatus == 'approved') ||
+                        // Normal users start as pending & viewer
+                        (request.resource.data.role == 'viewer' && request.resource.data.accessStatus == 'pending')
+                      );
       // Admins can update anything, users can only update their own profile if it doesn't change role or status
       allow update: if isAuthenticated() && 
                       (isAdmin() || 
@@ -76,8 +86,8 @@ service cloud.firestore {
     }
 
     match /observations/{obsId} {
-      // Non-admins can only read observations that aren't soft-deleted by the creator
-      allow read: if isApproved() && (isAdmin() || !('isDeletedByCreator' in resource.data) || resource.data.isDeletedByCreator == false);
+      // Non-admins can read observations that aren't soft-deleted or that they own (this supports the non-filtered owner query perfectly)
+      allow read: if isApproved() && (isAdmin() || resource.data.userId == request.auth.uid || !('isDeletedByCreator' in resource.data) || resource.data.isDeletedByCreator == false);
       allow create: if isApproved() && request.resource.data.userId == request.auth.uid && isValidObservation(request.resource.data);
       allow update: if isApproved() && (resource.data.userId == request.auth.uid || isAdmin()) && isValidObservation(request.resource.data);
       // Hard delete only allowed for admins

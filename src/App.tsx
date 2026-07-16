@@ -22,6 +22,7 @@ import {
   Trash2,
   Globe,
   Cloud,
+  ExternalLink,
   Download,
   Upload,
   MapPin,
@@ -115,6 +116,7 @@ import CameraView, { ProcessedImage } from "./components/CameraView";
 import MapView from "./components/MapView";
 import { ChatBot } from "./components/ChatBot";
 import { ConfirmDialog } from "./components/ConfirmDialog";
+import { EdgeAISettings } from "./components/EdgeAISettings";
 // Hooks & Utils
 import { useUserProfile } from "./hooks/useUserProfile";
 import { useObservations } from "./hooks/useObservations";
@@ -1590,6 +1592,20 @@ export default function App() {
   const [language, setLanguage] = useState<"fr" | "en" | "ar">("fr");
 
   useEffect(() => {
+    const initCapacitor = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const { SplashScreen } = await import('@capacitor/splash-screen');
+          await SplashScreen.hide();
+        } catch (e) {
+          console.warn('SplashScreen hide error:', e);
+        }
+      }
+    };
+    initCapacitor();
+  }, []);
+
+  useEffect(() => {
     const checkConnection = async () => {
       try {
         await testConnection();
@@ -1686,11 +1702,9 @@ export default function App() {
     return () => window.removeEventListener('liteRTLog', handleLog);
   }, []);
 
-  // Initialize LiteRT (Delayed for performance on older devices)
+  // Initialize LiteRT
   useEffect(() => {
     const warmup = async () => {
-      // Delay initialization to let the UI render first
-      await new Promise(resolve => setTimeout(resolve, 3000));
       setIsLiteRTReady(false);
       try {
         const engine = await initLiteRT(localModelPath);
@@ -1707,6 +1721,12 @@ export default function App() {
     localStorage.setItem("local_model_path", path);
     const modelName = GOOGLE_AI_EDGE_MODELS.find(m => m.url === path)?.name || path.split("/").pop();
     notifyUser(`Modèle local mis à jour : ${modelName}`, "info");
+  };
+
+  const handleToggleForceLocal = (val: boolean) => {
+    setForceLocalAnalysis(val);
+    localStorage.setItem("force_local_analysis", val ? "true" : "false");
+    notifyUser(val ? "Analyse locale forcée (Hors-ligne)" : "Analyse cloud automatique active", "info");
   };
 
   const runEdgeBenchmark = async () => {
@@ -4167,8 +4187,58 @@ export default function App() {
                     </span>
                   </div>
                 ))}
+ 
+              {typeof window !== "undefined" && !Capacitor.isNativePlatform() && window.self !== window.top && (() => {
+                const warn = {
+                  fr: {
+                    title: "Connexion sur Mobile / Tablette (iOS)",
+                    desc: "Les protections de confidentialité de Safari sur iPhone bloquent l'authentification Google dans l'aperçu de Google AI Studio.",
+                    instruction: "Pour vous connecter sans encombre, veuillez ouvrir l'application dans un nouvel onglet :",
+                    btn: "Ouvrir l'application hors-iframe"
+                  },
+                  en: {
+                    title: "Sign in on Mobile / Tablet (iOS)",
+                    desc: "Safari/iOS privacy features block Google authentication inside the Google AI Studio iframe preview.",
+                    instruction: "To log in successfully, please open the application in a new tab:",
+                    btn: "Open application in new tab"
+                  },
+                  ar: {
+                    title: "تسجيل الدخول على الهاتف / الجهاز اللوحي (iOS)",
+                    desc: "ميزات خصوصية Safari/iOS تمنع مصادقة Google داخل معاينة Google AI Studio (iframe).",
+                    instruction: "لتسجيل الدخول بنجاح، يرجى فتح التطبيق في علامة تبويب جديدة:",
+                    btn: "افتح التطبيق في علامة تبويب جديدة"
+                  }
+                };
+                const currentWarn = warn[language] || warn.fr;
+                return (
+                  <div className={`p-4 border rounded-2xl flex flex-col gap-3 text-left mb-6 shadow-sm ${
+                    isLightMode 
+                      ? "bg-amber-50 border-amber-200 text-amber-900" 
+                      : "bg-[#1d1b16] border-amber-500/20 text-amber-200"
+                  }`}>
+                    <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+                      <AlertCircle className={isLightMode ? "text-amber-600 shrink-0" : "text-amber-400 shrink-0"} size={18} />
+                      <span>{currentWarn.title}</span>
+                    </div>
+                    <p className={`text-[11px] sm:text-xs leading-relaxed ${isLightMode ? "text-slate-600 font-medium" : "text-slate-300 font-medium"}`}>
+                      {currentWarn.desc}
+                      <br /><br />
+                      {currentWarn.instruction}
+                    </p>
+                    <a
+                      href={window.location.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-xs cursor-pointer text-center"
+                    >
+                      <ExternalLink size={14} />
+                      {currentWarn.btn}
+                    </a>
+                  </div>
+                );
+              })()}
 
-              <div className="flex flex-col gap-3">
+               <div className="flex flex-col gap-3">
                 <button
                   onClick={async () => {
                     setIsAuthLoading(true);
@@ -4412,7 +4482,7 @@ export default function App() {
 
   return (
     <main
-      className="h-[100dvh] overflow-hidden bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5 relative"
+      className="h-[100dvh] overflow-hidden bg-[#111412] text-slate-300 font-sans flex flex-col max-w-md mx-auto shadow-2xl border-x border-white/5 relative safe-area-bottom"
       dir={isArabic ? "rtl" : "ltr"}
     >
       {/* Header */}
@@ -4446,6 +4516,18 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowEdgeAISettings(true)}
+            className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all ${
+              localModelPath === "gemma_3_270m_local"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                : "bg-[#0d120f] border-white/5 text-slate-400 hover:text-white"
+            }`}
+            title="Panneau de Contrôle IA Locale"
+            aria-label="Ouvrir le panneau d'IA locale"
+          >
+            <Cpu size={18} className={localModelPath === "gemma_3_270m_local" ? "animate-pulse" : ""} />
+          </button>
           <button
             onClick={() => setIsLightMode(!isLightMode)}
             className="w-10 h-10 rounded-full bg-[#0d120f] border border-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
@@ -6014,6 +6096,18 @@ export default function App() {
           ))}
         </AnimatePresence>
       </div>)}
+
+      <EdgeAISettings
+        isOpen={showEdgeAISettings}
+        onClose={() => setShowEdgeAISettings(false)}
+        localModelPath={localModelPath}
+        onUpdateModel={updateLocalModel}
+        forceLocalAnalysis={forceLocalAnalysis}
+        onToggleForceLocal={handleToggleForceLocal}
+        onRunBenchmark={runEdgeBenchmark}
+        isBenchmarking={isBenchmarking}
+        edgeLogs={edgeLogs}
+      />
     </main>
   );
 }
