@@ -16,14 +16,17 @@ jobs:
 
       - name: Install Project Dependencies
         run: |
-          # Installe les paquets de votre application (React/Next/Vue)
           npm install
-          # Génère les fichiers de production (le dossier build ou out)
           npm run build --if-present
 
       - name: Setup Capacitor (No-Code iOS Wrapper)
         run: |
-          # Installe l'outil qui transforme le web en application iOS native
+          # Nettoyage des anciennes configurations conflictuelles
+          rm -f capacitor.config.ts
+          rm -f capacitor.config.json
+          rm -f capacitor.config.js
+          
+          # Installation propre de l'environnement iOS
           npm install @capacitor/core @capacitor/cli
           npx cap init AgriScan com.agriscan.app --web-dir=out
           npm install @capacitor/ios
@@ -31,16 +34,15 @@ jobs:
 
       - name: Sync Code to iOS
         run: |
-          # Copie vos fichiers web directement dans le projet iOS
           npx cap sync ios
 
       - name: Build IPA File
         run: |
           cd ios/App
-          # Compile le code en arrière-plan sans ouvrir Xcode
+          # Compilation du projet natif Xcode en arrière-plan
           xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean build
           
-          # Création du fichier .ipa final
+          # Génération de l'archive au format .ipa pour l'iPhone
           mkdir Payload
           mv build/Release-iphoneos/App.app Payload/
           zip -r AgriScan.ipa Payload
