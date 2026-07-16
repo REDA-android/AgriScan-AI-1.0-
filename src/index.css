@@ -28,10 +28,25 @@
   }
 }
 
+/* Explicit Fallbacks for Older Browsers (Android 6 / Chrome < 100) */
 body {
-  background-color: #111412;
-  color: #f8fafc; /* text-slate-50 */
+  background-color: #111412 !important;
+  color: #f8fafc !important;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
 }
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+input, button, select, textarea {
+  font-family: inherit;
+}
+
 
 /* Custom Range Slider */
 input[type=range].slider-glass {

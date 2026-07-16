@@ -1686,9 +1686,11 @@ export default function App() {
     return () => window.removeEventListener('liteRTLog', handleLog);
   }, []);
 
-  // Initialize LiteRT
+  // Initialize LiteRT (Delayed for performance on older devices)
   useEffect(() => {
     const warmup = async () => {
+      // Delay initialization to let the UI render first
+      await new Promise(resolve => setTimeout(resolve, 3000));
       setIsLiteRTReady(false);
       try {
         const engine = await initLiteRT(localModelPath);

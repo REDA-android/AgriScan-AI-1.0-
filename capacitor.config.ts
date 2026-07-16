@@ -9,6 +9,9 @@ const config: CapacitorConfig = {
     hostname: "localhost",
     cleartext: true,
   },
+  android: {
+    resolveServiceWorkerRequests: false
+  },
   plugins: {
     GoogleAuth: {
       scopes: ["profile", "email"],
