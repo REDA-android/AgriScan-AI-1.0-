@@ -1,0 +1,71 @@
+name: Build IPA From Git Source
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code Git
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Project Dependencies
+        run: |
+          npm install
+          npm run build --if-present
+
+      - name: Setup Capacitor (No-Code iOS Wrapper)
+        run: |
+          rm -f capacitor.config.ts
+          rm -f capacitor.config.json
+          rm -f capacitor.config.js
+          
+          WEB_DIR="out"
+          if [ -d "build" ]; then WEB_DIR="build"; fi
+          if [ -d "dist" ]; then WEB_DIR="dist"; fi
+          if [ -d ".next" ] && [ ! -d "out" ]; then WEB_DIR="build"; fi
+          
+          echo "Dossier web détecté : $WEB_DIR"
+          mkdir -p $WEB_DIR
+          touch $WEB_DIR/index.html
+          
+          npm install @capacitor/core @capacitor/cli
+          npx cap init AgriScan com.agriscan.app --web-dir=$WEB_DIR
+          npm install @capacitor/ios
+          npx cap add ios
+
+      - name: Sync Code to iOS
+        run: |
+          npx cap sync ios
+
+      - name: Build IPA File
+        run: |
+          cd ios/App
+          
+          # Force Xcode à télécharger les dépendances Swift
+          xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App
+          
+          # Compilation native en spécifiant un dossier d'exportation propre (Build)
+          xcodebuild -project App.xcodeproj -scheme App -destination 'generic/platform=iOS' -configuration Release -derivedDataPath ./DerivedData CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean build
+          
+          # Création de la structure officielle .IPA
+          mkdir -p Payload
+          
+          # Recherche automatique et copie sécurisée du fichier .app généré
+          APP_PATH=$(find ./DerivedData -name "*.app" -type d | head -n 1)
+          echo "Application localisée à l'emplacement : $APP_PATH"
+          cp -r "$APP_PATH" Payload/
+          
+          # Compression finale au format IPA
+          zip -r AgriScan.ipa Payload
+          
+      - name: Download your .IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AgriScan-iOS-App
+          path: ios/App/AgriScan.ipa
