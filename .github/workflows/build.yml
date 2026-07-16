@@ -21,10 +21,13 @@ jobs:
 
       - name: Setup Capacitor (No-Code iOS Wrapper)
         run: |
+          # Nettoyage complet des anciennes configurations et de l'ancien dossier ios pour éviter le conflit
+          rm -rf ios
           rm -f capacitor.config.ts
           rm -f capacitor.config.json
           rm -f capacitor.config.js
           
+          # Détection automatique du bon dossier de build
           WEB_DIR="out"
           if [ -d "build" ]; then WEB_DIR="build"; fi
           if [ -d "dist" ]; then WEB_DIR="dist"; fi
@@ -34,6 +37,7 @@ jobs:
           mkdir -p $WEB_DIR
           touch $WEB_DIR/index.html
           
+          # Réinstallation propre de l'environnement iOS
           npm install @capacitor/core @capacitor/cli
           npx cap init AgriScan com.agriscan.app --web-dir=$WEB_DIR
           npm install @capacitor/ios
