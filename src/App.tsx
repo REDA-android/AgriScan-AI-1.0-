@@ -1596,14 +1596,24 @@ export default function App() {
       if (Capacitor.isNativePlatform()) {
         try {
           const { SplashScreen } = await import('@capacitor/splash-screen');
+          const { StatusBar, Style } = await import('@capacitor/status-bar');
+          const { Keyboard } = await import('@capacitor/keyboard');
+
           await SplashScreen.hide();
+          
+          // Native bridge for StatusBar
+          await StatusBar.setStyle({ style: isLightMode ? Style.Light : Style.Dark });
+          await StatusBar.setOverlaysWebView({ overlay: true });
+
+          // Keyboard handling
+          await Keyboard.setAccessoryBarVisible({ isVisible: false });
         } catch (e) {
-          console.warn('SplashScreen hide error:', e);
+          console.warn('Capacitor init error:', e);
         }
       }
     };
     initCapacitor();
-  }, []);
+  }, [isLightMode]);
 
   useEffect(() => {
     const checkConnection = async () => {
