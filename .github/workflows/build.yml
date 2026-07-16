@@ -21,12 +21,10 @@ jobs:
 
       - name: Setup Capacitor (No-Code iOS Wrapper)
         run: |
-          # Nettoyage des configurations obsolètes
           rm -f capacitor.config.ts
           rm -f capacitor.config.json
           rm -f capacitor.config.js
           
-          # Détection automatique du bon dossier de build
           WEB_DIR="out"
           if [ -d "build" ]; then WEB_DIR="build"; fi
           if [ -d "dist" ]; then WEB_DIR="dist"; fi
@@ -36,7 +34,6 @@ jobs:
           mkdir -p $WEB_DIR
           touch $WEB_DIR/index.html
           
-          # Installation et initialisation de l'environnement iOS
           npm install @capacitor/core @capacitor/cli
           npx cap init AgriScan com.agriscan.app --web-dir=$WEB_DIR
           npm install @capacitor/ios
@@ -49,10 +46,14 @@ jobs:
       - name: Build IPA File
         run: |
           cd ios/App
-          # Compilation directe du projet Xcode d'origine généré par Capacitor
-          xcodebuild -project App.xcodeproj -scheme App -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean build
           
-          # Génération et compression de l'archive au format .ipa pour l'iPhone
+          # Étape indispensable : Force Xcode à télécharger et valider les dépendances SPM
+          xcodebuild -resolvePackageDependencies -project App.xcodeproj -scheme App
+          
+          # Compilation propre avec assignation explicite de la cible générique
+          xcodebuild -project App.xcodeproj -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO clean build
+          
+          # Stockage dans le conteneur IPA pour le téléchargement
           mkdir Payload
           mv build/Release-iphoneos/App.app Payload/
           zip -r AgriScan.ipa Payload
